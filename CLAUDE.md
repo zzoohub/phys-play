@@ -79,14 +79,3 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 - **Responsive**: Support all screen sizes.
 - **Dark mode**: Support light and dark themes.
 <!-- Add project-specific UI conventions -->
-
-## Mobile
-### Mobile Workflow
-- Design System: **z-design-system**
-- Default: **expo-app-design:building-native-ui** (implementation) → **vercel-react-native-skills** (improve)
-<!-- Add or replace sub-agent as needed -->
-
-### Mobile Conventions
-- **i18n**: All user-facing text must support English and Korean. Share translation keys with web where possible.
-- **Dark mode**: Support light and dark themes.
-<!-- Add project-specific mobile conventions -->
