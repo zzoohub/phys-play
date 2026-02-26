@@ -75,7 +75,7 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 - `app(routing) → views → widgets → features → entities → shared` (never import upward)
 
 ### Web Conventions
-- **i18n**: All user-facing text must support en, es, pt-BR, id, ja, ar and ko
+- **i18n**: All user-facing text must support en, es, pt-BR, id, ja and ko
 - **Responsive**: Support all screen sizes.
 - **Dark mode**: Support light and dark themes.
 <!-- Add project-specific UI conventions -->
@@ -87,6 +87,6 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 <!-- Add or replace sub-agent as needed -->
 
 ### Mobile Conventions
-- **i18n**: All user-facing text must support en, es, pt-BR, id, ja, ar and ko. Share translation keys with web where possible.
+- **i18n**: All user-facing text must support en, es, pt-BR, id, ja and ko. Share translation keys with web where possible.
 - **Dark mode**: Support light and dark themes.
 <!-- Add project-specific mobile conventions -->
