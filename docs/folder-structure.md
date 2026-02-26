@@ -66,18 +66,13 @@ src/
 ```
 
 
-## Web 3D / WebXR (TanStack Router)
+## Web 3D / WebXR
 
 ### Base Structure
-
 ```
 src/
-├── routes/                     # TanStack Router file-based routing
-│   ├── __root.tsx
-│   ├── index.tsx
-│   └── ...
-├── router.tsx
-├── routeTree.gen.ts            # Auto-generated (do not edit)
+├── app/                        # App shell & routing (framework-specific, internals vary)
+│   └── ...                     #   Rule: imports downward only. Nothing below imports app/.
 │
 ├── scene/                      # 3D world (R3F components)
 │   ├── canvas.tsx              # WebGPU detect → WebGL fallback
@@ -117,7 +112,6 @@ src/
 Each folder exposes public API via index.ts barrel only. No cross-import within same layer.
 
 ### Extensions (add only when triggered)
-
 ```
 + engine/                       ← Never imports React
 │   ├── ecs/                    # Koota — frame loop state (position, velocity, AI)
@@ -152,10 +146,9 @@ Each folder exposes public API via index.ts barrel only. No cross-import within 
 ```
 
 ### Dependency Direction
-
 ```
 ┌─────────────────────────────────────────────────────┐
-│  routes/                                            │
+│  app/              ← framework-specific shell        │
 │    ↓                                                │
 │  domains/          ← composes everything below      │
 │    ↓                                                │
