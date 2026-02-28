@@ -69,7 +69,7 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 ## Web
 ### Web Workflow (MUST FOLLOW)
 - Design System: **z-design-system**
-- Default: **vercel-composition-patterns** (implementation) → **vercel-react-best-practices** (improve)
+- Default: **vercel-composition-patterns** (composition) → **vercel-react-best-practices** (optimization)
 
 ### FSD Import Rules
 - `app(routing) → views → widgets → features → entities → shared` (never import upward)
