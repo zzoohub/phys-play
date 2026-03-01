@@ -265,10 +265,13 @@ src/
 │   ├── materials/
 │   │   ├── create-material.ts  # Factory: (type, renderer) → Material
 │   │   └── *.ts                # Each file handles its own WebGPU/WebGL branch
-│   ├── hooks/
-│   │   ├── ecs/                # ECS → R3F read-only bridge (useQuery, useEntity)
-│   │   └── physics/            # Physics state reads for R3F
+│   ├── hooks/                  # Scene-level hooks (add ecs/, physics/ with engine)
 │   └── helpers/
+│
+├── hud/                        # Shared HUD components
+│   ├── controls/               # Slider, Toggle, Button (mesh + HTML adaptive)
+│   ├── overlays/               # Labels, indicators
+│   └── panels/                 # Grouped control panels
 │
 ├── xr/                         # WebXR (omit if not needed)
 │   ├── session.tsx
@@ -276,15 +279,9 @@ src/
 │   ├── interactions/
 │   └── spaces/
 │
-├── ui/                         # 2D interface
-│   ├── design-system/
-│   ├── components/
-│   ├── hud/                    # Overlay on 3D
-│   ├── panels/
-│   └── layout/
-│
 └── shared/                     # Referenced by all layers above
-    ├── stores/                 # Zustand — UI/meta only. Never imports engine/ or domains/
+    ├── ui/                     # Thin DOM UI (settings modal, loading screen)
+    ├── stores/                 # Zustand — UI/meta (theme, modal, prefs)
     ├── types/
     ├── constants/
     ├── hooks/
@@ -309,13 +306,17 @@ Each folder exposes public API via index.ts barrel only. No cross-import within 
 │   ├── physics/                ← Imperative Rapier WASM (graduate from @react-three/rapier)
 │   └── shaders/                # TSL / GLSL
 │
++ scene/hooks/ecs/              ← Add with engine/. Koota → R3F read-only bridge
++ scene/hooks/physics/          ← Add with engine/. Rapier state reads for R3F
+│
 + domains/                      ← 2+ independent scenes/modes
 │   └── [domain-name]/
-│       ├── use-cases/
-│       ├── stores/             # Domain-scoped Zustand (reads engine via scene/hooks/)
-│       ├── index.tsx              # Domain entry point
-│       ├── config.ts
-│       └── ui/
+│       ├── index.tsx           #   Domain entry point
+│       ├── use-cases/          #   Domain-specific business logic
+│       ├── systems/            #   Domain-specific ECS systems
+│       ├── stores/             #   Domain-scoped state
+│       ├── hud/                #   Domain-specific HUD elements
+│       └── config.ts           #   Domain parameters, constraints
 │
 + networking/                   ← Multiplayer or real-time sync
 + content/                      ← External data injected into 3D scene
@@ -330,19 +331,19 @@ Each folder exposes public API via index.ts barrel only. No cross-import within 
 
 ### Dependency Direction
 ```
-┌─────────────────────────────────────────────────────┐
-│  app/              ← framework-specific shell        │
-│    ↓                                                │
-│  domains/          ← composes everything below      │
-│    ↓                                                │
-│  engine/           ← pure logic, never imports React│
-│    ↓                                                │
-│  scene/            ← R3F components                 │
-│    ↓                                                │
-│  ui/               ← 2D overlay                     │
-│    ↓                                                │
-│  shared/           ← referenced by all above        │
-└─────────────────────────────────────────────────────┘
+Top-level:
+
+  ┌─────────────────────────────────────────────────────┐
+  │  app/              ← framework-specific shell        │
+  │    ↓                                                │
+  │  domains/          ← composes scene + engine        │
+  │    ↓                                                │
+  │  scene/  ←bridge→  engine/                          │
+  │    ↓                 ↓                              │
+  │  hud/                                               │
+  │    ↓                                                │
+  │  shared/           ← referenced by all above        │
+  └─────────────────────────────────────────────────────┘
 
 Cross-links (→ means "depends on"):
 
@@ -359,6 +360,6 @@ Bridges:
 State ownership:
 
   Zustand  shared/stores/         UI/meta (theme, modal, prefs)
-  Zustand  domains/[name]/stores/ Domain UI (editor mode, tool selection)
+  Zustand  domains/[name]/stores/ Domain-scoped (editor mode, tool selection)
   Koota    engine/ecs/            Simulation (position, velocity, AI)
 ```
