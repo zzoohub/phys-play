@@ -70,7 +70,8 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 - `app(routing) → views → widgets → features → entities → shared` (never import upward)
 
 ### Web Conventions
-- **i18n**: All user-facing text must support en, es, pt-BR, id, ja and ko
+- **Type Safety**: Enforce the strictest TypeScript compiler options.
+- **I18n**: All user-facing text must support en and ko.
 - **Responsive**: Support all screen sizes.
 - **Dark mode**: Support light and dark themes.
 <!-- Add project-specific UI conventions -->
