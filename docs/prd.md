@@ -434,6 +434,6 @@ XR 기기가 있는 사용자가 동일 콘텐츠를 공간 몰입 모드로 전
 - [Product Brief](./product-brief.md)
 - [Phase 1 PRD](./prd-phase-1.md)
 - [Curriculum](../content/curriculum/)
-- [Folder Structure](./folder-structure.md)
+- [Client Structure](./client-structure.md)
 - [Database Design](./database-design.md)
 - [UX Design](./ux-design.md)
