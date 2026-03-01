@@ -256,7 +256,7 @@ src/
 │   └── shared/
 │       ├── hooks/                #   R3F hooks
 │       ├── lib/                  #   Three.js utilities
-│       └── assets/               #   glTF, KTX2 textures, audio
+│       └── assets/               #   glTF, KTX2 textures, audio (shared/assets/ in 3D-only)
 │
 └── shared/                       # Global shared (referenced by all layers)
     ├── ui/                       #   Cross-layer UI primitives (loading, error boundary)
