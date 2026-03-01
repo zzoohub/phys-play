@@ -9,8 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Monorepo Structure
 ```
-├── api/              # Backend API
-├── web/│   
+├── api/                  # Backend API
+├── web/                  # Frontend web client
 ├── db/
 │   ├── migrations/
 │   └── seeds/
@@ -58,19 +58,13 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 ### API Conventions
 <!-- Define API conventions (e.g., error format, auth strategy, pagination style) -->
 
-## Worker
-<!-- If worker is needed -->
-
 ## Web
 ### Web Workflow (MUST FOLLOW)
-- Design System: **z-design-system**
-
-
-### FSD Import Rules
-- `app(routing) → views → widgets → features → entities → shared` (never import upward)
+- Design system: **z-design-system**
+- UI: **frontend-design**
 
 ### Web Conventions
-- **Type Safety**: Enforce the strictest TypeScript compiler options.
+- **Type safety**: Enforce the strictest TypeScript compiler options.
 - **I18n**: All user-facing text must support en and ko.
 - **Responsive**: Support all screen sizes.
 - **Dark mode**: Support light and dark themes.
