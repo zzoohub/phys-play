@@ -1,0 +1,90 @@
+erDiagram
+    %% PhysPlay — Phase 3+ Database ERD
+    %% All tables introduced in Phase 3
+
+    %% === Auth & Users ===
+
+    user_account {
+        bigint id PK
+        timestamptz created_at
+        timestamptz updated_at
+        text google_id UK
+        text email UK
+        text name
+        text avatar_url
+        text role "student | teacher"
+        text locale "ko | en | es | pt-BR | id | ja"
+        text theme "light | dark | system"
+    }
+
+    refresh_token {
+        bigint id PK
+        timestamptz created_at
+        timestamptz expires_at
+        bigint user_id FK
+        text token_hash UK
+    }
+
+    %% === Learning Progress ===
+
+    module_progress {
+        bigint id PK
+        timestamptz created_at
+        timestamptz updated_at
+        bigint user_id FK
+        text module_id "e.g. 1-1, 2-3"
+        boolean is_completed
+        integer total_dwell_seconds
+        integer total_interaction_count
+        timestamptz first_visited_at
+        timestamptz last_visited_at
+        timestamptz completed_at
+    }
+
+    %% === B2B: Classes & Enrollment ===
+
+    class {
+        bigint id PK
+        timestamptz created_at
+        timestamptz updated_at
+        bigint teacher_id FK
+        text name
+        text invite_code UK
+        boolean is_active
+    }
+
+    class_enrollment {
+        bigint id PK
+        timestamptz enrolled_at
+        bigint class_id FK
+        bigint student_id FK
+    }
+
+    %% === B2B: Learning Paths ===
+
+    learning_path {
+        bigint id PK
+        timestamptz created_at
+        timestamptz updated_at
+        bigint teacher_id FK
+        text name
+        text_array module_ids "ordered array"
+    }
+
+    class_learning_path {
+        bigint id PK
+        timestamptz assigned_at
+        bigint class_id FK
+        bigint learning_path_id FK
+    }
+
+    %% === Relationships ===
+
+    user_account ||--o{ refresh_token : "has"
+    user_account ||--o{ module_progress : "tracks"
+    user_account ||--o{ class : "teaches"
+    user_account ||--o{ class_enrollment : "enrolls in"
+    user_account ||--o{ learning_path : "creates"
+    class ||--o{ class_enrollment : "has"
+    class ||--o{ class_learning_path : "assigned"
+    learning_path ||--o{ class_learning_path : "assigned to"
