@@ -35,9 +35,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Principles & Constraints
 ### MUST
-1. Any change to business strategy, feature specs, architecture, or user tracking must update the relevant documents in `docs/` or `biz/`.
-2. All service code changes must use skills, including after plan mode.
-3. After implementation, check if sub-agents are needed and run in parallel:
+1. Any change to requirements, product scope, architecture, data model, UX/UI design, or project structure must be reflected in `docs/`.
+2. Any change to tracking, analytics, pricing, growth strategy, marketing, legal terms, or ops processes must be reflected in `biz/`.
+3. All service code changes must use skills, including after plan mode.
+4. After implementation, check if sub-agents are needed and run in parallel:
    - **z-security-reviewer**: Run when changes affect security-sensitive areas (auth, data access, API endpoints).
    - **z-verifier**: Run when changes include testable code (new/modified functions, logic branches). 
    > Skip all for docs/copy-only changes. Skip browser test if `claude-in-chrome` MCP is unavailable.
