@@ -2,28 +2,61 @@
 
 Each folder exposes its public API via `index.ts` barrel only. No cross-import within the same layer.
 
-## Web (Nextjs)
-```
-app/                 # Next.js App Router — routing only (thin re-exports)
-├── layout.tsx       # Root layout (imports @/app/providers, @/app/globals.css)
-├── page.tsx         # import { DashboardPage } from '@/views/dashboard'
-└── some-page/
-    └── page.tsx     # Thin: import page from @/views/, render it
+## Web & Mobile
 
-src/                 # All FSD layers
-├── app/             # FSD app-layer: providers, global styles (NO routing files)
-│   ├── globals.css
-│   └── providers/
-├── views/           # FSD pages layer (named "views" to avoid Next.js pages/ conflict)
-│   └── dashboard/   # Compose widgets into full page layouts
+`src/app/` is the FSD app-layer: providers, global styles, and routing. Route files are thin wrappers that import views.
+
+### `src/app/` internals (framework-specific)
+
+**Next.js** (`src/app/`):
+```
+src/app/
+├── layout.tsx       # Root layout
+├── page.tsx         # import { HomePage } from '@/views/home'
+├── some-page/
+│   └── page.tsx     # Thin: import from @/views/, render it
+├── globals.css
+└── providers/
+```
+
+**TanStack Start** (`src/app/`):
+```
+src/app/
+├── routes/          # File-based routing (TanStack Router)
+│   ├── __root.tsx   # Root layout
+│   ├── index.tsx    # Home (/) — import from @/views/
+│   └── some-page/
+│       └── index.tsx
+├── router.tsx       # Router configuration
+├── routeTree.gen.ts # Auto-generated route tree
+├── globals.css
+└── providers/
+```
+
+**Expo Router** (`src/app/`):
+```
+src/app/
+├── _layout.tsx      # Root layout
+├── index.tsx        # Home (/)
+├── some-page/
+│   └── index.tsx    # Thin: import from @/views/, render it
+└── providers/
+```
+
+### Source (FSD)
+```
+src/
+├── app/             # App-layer: providers, global styles, routing (see above)
+├── views/           # Page compositions (compose widgets into full page layouts)
+│   └── dashboard/
 │       └── ui/
-├── widgets/         # Sections/blocks (Header, Sidebar, StatsCards, RecentRuns)
+├── widgets/         # Sections/blocks (Header, Sidebar, StatsCards)
 ├── features/        # User interactions (auth, send-comment, add-to-cart)
 │   └── auth/
 │       ├── ui/
 │       ├── model/
 │       ├── api/
-│       └── actions/   # Server Actions
+│       └── actions/   # Server functions
 ├── entities/        # Business entities (user, product, order)
 │   └── user/
 │       ├── ui/
@@ -39,49 +72,146 @@ src/                 # All FSD layers
     └── constants/   # Environment, constants
 ```
 
-- Root `app/` is for Next.js routing only. `src/` holds all FSD layers.
-- `src/app/` is the FSD app-layer (providers, global styles), NOT routing.
+- `views/` avoids naming conflict with routing (`pages/`, `routes/`) regardless of framework.
 
-## Mobile (Expo)
-```
-app/                 # Expo Router (file-based routing)
-├── _layout.tsx      # Root layout
-├── index.tsx        # Home (/)
-└── some-page/
-    └── index.tsx    # /some-page (routing + page composition)
-src/
-├── app/             # App-wide settings, providers, global styles
-│   └── providers/
-├── widgets/         # Large composite blocks (Header, Sidebar, Feed)
-├── features/        # User interactions (auth, send-comment, add-to-cart)
-│   └── auth/
-│       ├── ui/
-│       ├── model/
-│       └── api/
-├── entities/        # Business entities (user, product, order)
-│   └── user/
-│       ├── ui/
-│       ├── model/
-│       └── api/
-└── shared/          # Reusable infrastructure
-    ├── ui/          # Design system
-    ├── api/         # API client
-    ├── lib/         # Utilities, helpers
-    ├── hooks/       # Shared hooks
-    ├── stores/      # Global state (auth, theme)
-    ├── types/       # Shared types
-    └── constants/   # Environment, constants
-```
+## Web 3D / WebXR
 
-
-## Web 2D + 3D / WebXR
-
-Applications where 2D web pages and 3D/XR content coexist. Same structure applies regardless of 2D/3D weight.
+3D/XR-only applications. No or minimal 2D web pages.
 
 **Stack**: Three.js (WebGPU-first) · React Three Fiber · Drei · TSL shaders · @react-three/xr · Koota ECS · Rapier WASM · Zustand · Rust WASM · glTF
 
+### Base Structure
+```
+src/
+├── app/                        # App shell & routing (framework-specific, internals vary)
+│   └── ...                     #   Rule: imports downward only. Nothing below imports app/.
+│
+├── scene/                      # 3D world (R3F components)
+│   ├── canvas.tsx              # WebGPU detect → WebGL fallback
+│   ├── objects/
+│   ├── environments/           # Lighting, skybox, post-processing
+│   ├── cameras/
+│   ├── materials/
+│   │   ├── create-material.ts  # Factory: (type, renderer) → Material
+│   │   └── *.ts                # Each file handles its own WebGPU/WebGL branch
+│   ├── hooks/                  # Scene-level hooks (add ecs/, physics/ with engine)
+│   └── helpers/
+│
+├── hud/                        # Shared HUD components
+│   ├── controls/               # Slider, Toggle, Button (mesh + HTML adaptive)
+│   ├── overlays/               # Labels, indicators
+│   └── panels/                 # Grouped control panels
+│
+├── xr/                         # WebXR (omit if not needed)
+│   ├── session.tsx
+│   ├── controllers/
+│   ├── interactions/
+│   └── spaces/
+│
+└── shared/                     # Referenced by all layers above
+    ├── ui/                     # DOM overlay outside Canvas (settings modal, loading screen)
+    ├── api/                    # HTTP client, interceptors, base URL
+    ├── lib/                    # Utilities, helpers
+    ├── hooks/
+    ├── stores/                 # Zustand — UI/meta (theme, modal, prefs)
+    ├── types/
+    ├── constants/
+    └── assets/                 # glTF, textures, audio
+```
+
+### Extensions (add only when triggered)
+```
++ engine/                       ← Never imports React
+│   ├── ecs/                    # Koota — frame loop state (position, velocity, AI)
+│   │   ├── components/         #   Pure data definitions
+│   │   ├── systems/            #   Pure logic (stateless)
+│   │   ├── queries/
+│   │   ├── prefabs/
+│   │   └── world.ts
+│   ├── ports/
+│   ├── adapters/
+│   │   └── rapier/             # Physics → ECS sync (no React)
+│   ├── physics/                ← Imperative Rapier WASM (graduate from @react-three/rapier)
+│   └── shaders/                # TSL / GLSL
+│
++ scene/hooks/ecs/              ← Add with engine/ (inside existing scene/hooks/)
++ scene/hooks/physics/          ← Add with engine/ (inside existing scene/hooks/)
+│
++ domains/                      ← 2+ independent scenes/modes
+│   └── [domain-name]/
+│       ├── index.tsx           #   Domain entry point
+│       ├── use-cases/          #   Domain-specific business logic
+│       ├── systems/            #   Domain-specific ECS systems
+│       ├── stores/             #   Domain-scoped state
+│       ├── hud/                #   Domain-specific HUD elements
+│       └── config.ts           #   Domain parameters, constraints
+│
++ networking/                   ← Multiplayer or real-time sync
++ content/                      ← External data injected into 3D scene
+│
++ workers/
+│   └── compute-worker.ts      # Imports bindings from wasm-out/
+│
++ crates/                       ← Rust source (project root, Cargo workspace)
+│   └── compute/src/
++ wasm-out/                     ← Build artifacts only (project root, gitignored)
+```
+
+### Dependency Direction
+```
+Top-level:
+
+  ┌─────────────────────────────────────────────────────┐
+  │  app/              ← framework-specific shell        │
+  │    ↓                                                │
+  │  domains/          ← composes scene + engine        │
+  │    ↓                                                │
+  │  scene/  ─reads→  engine/                           │
+  │    ↓                 ↓                              │
+  │  hud/                                               │
+  │    ↓                                                │
+  │  shared/           ← referenced by all above        │
+  └─────────────────────────────────────────────────────┘
+
+Cross-links (→ means "depends on"):
+
+  xr/           → scene/
+  networking/   → engine/
+  workers/      → engine/
+
+Bridges:
+
+  scene/hooks/ecs/     → engine/ecs/      React reads ECS (not the reverse)
+  engine/adapters/     → engine/ecs/      Physics syncs into ECS (no React)
+  domains/stores/      → scene/hooks/     Domain Zustand reads engine via bridge
+
+State ownership:
+
+  Zustand  shared/stores/         UI/meta (theme, modal, prefs)
+  Zustand  domains/[name]/stores/ Domain-scoped (editor mode, tool selection)
+  Koota    engine/ecs/            Simulation (position, velocity, AI)
+```
+
+### When to Add Each Layer
+
+| Layer | Trigger | Omit when |
+|-------|---------|-----------|
+| `xr/` | WebXR support needed | No XR |
+| `hud/` | In-scene control UI needed | No HUD (e.g., background 3D) |
+| `engine/` | ECS, physics, or custom shaders needed | Simple 3D rendering only |
+| `domains/` | Independent areas with custom logic/state | Single scene or config-driven variants |
+| `networking/` | Multiplayer or real-time sync | Single user |
+| `workers/` | CPU-bound computation offload | Main thread sufficient |
+| `crates/` | Rust → WASM custom computation | JS/TS sufficient |
+
+## Web 2D + 3D / WebXR
+
+Extends the 3D structure above with a `site/` layer for 2D web pages. The 3D layer is wrapped in `experience/` to separate it from `site/`.
+
+**Stack**: Same as Web 3D / WebXR above.
+
 - `site/` — 2D layer (FSD). Pure web pages, design system.
-- `experience/` — 3D layer. R3F scene, WebXR, HUD.
+- `experience/` — 3D layer. Wraps scene/, hud/, xr/ from Web 3D structure above.
 - `engine/` — Framework-agnostic pure logic. Koota ECS, Rapier physics, TSL shaders. Never imports React.
 - `domains/` — Independent area composition. Composes experience + engine; may reference shared/.
 - `shared/` — Global shared. Referenced by all layers.
@@ -95,7 +225,7 @@ src/
 │   └── ...                       #   Routes to site/ (2D pages) or domains/ (3D experiences)
 │
 ├── site/                         # 2D layer (FSD)
-│   ├── pages/                    #   Page compositions (landing, dashboard)
+│   ├── views/                    #   Page compositions (landing, dashboard)
 │   ├── widgets/                  #   Composite blocks (Header, Footer, Card)
 │   ├── features/                 #   User interactions (auth, theme-toggle, i18n-switcher)
 │   ├── entities/                 #   Business entities (user, product, order)
@@ -255,123 +385,3 @@ State ownership:
 | `networking/` | Multiplayer or real-time sync | Single user |
 | `workers/` | CPU-bound computation offload | Main thread sufficient |
 | `crates/` | Rust → WASM custom computation | JS/TS sufficient |
-
----
-
-## Web 3D / WebXR
-
-3D/XR-only applications. No or minimal 2D web pages.
-
-**Stack**: Three.js (WebGPU-first) · React Three Fiber · Drei · TSL shaders · @react-three/xr · Koota ECS · Rapier WASM · Zustand · Rust WASM · glTF
-
-### Base Structure
-```
-src/
-├── app/                        # App shell & routing (framework-specific, internals vary)
-│   └── ...                     #   Rule: imports downward only. Nothing below imports app/.
-│
-├── scene/                      # 3D world (R3F components)
-│   ├── canvas.tsx              # WebGPU detect → WebGL fallback
-│   ├── objects/
-│   ├── environments/           # Lighting, skybox, post-processing
-│   ├── cameras/
-│   ├── materials/
-│   │   ├── create-material.ts  # Factory: (type, renderer) → Material
-│   │   └── *.ts                # Each file handles its own WebGPU/WebGL branch
-│   ├── hooks/                  # Scene-level hooks (add ecs/, physics/ with engine)
-│   └── helpers/
-│
-├── hud/                        # Shared HUD components
-│   ├── controls/               # Slider, Toggle, Button (mesh + HTML adaptive)
-│   ├── overlays/               # Labels, indicators
-│   └── panels/                 # Grouped control panels
-│
-├── xr/                         # WebXR (omit if not needed)
-│   ├── session.tsx
-│   ├── controllers/
-│   ├── interactions/
-│   └── spaces/
-│
-└── shared/                     # Referenced by all layers above
-    ├── ui/                     # DOM overlay outside Canvas (settings modal, loading screen)
-    ├── api/                    # HTTP client, interceptors, base URL
-    ├── lib/                    # Utilities, helpers
-    ├── hooks/
-    ├── stores/                 # Zustand — UI/meta (theme, modal, prefs)
-    ├── types/
-    ├── constants/
-    └── assets/                 # glTF, textures, audio (in experience/shared/ for 2D+3D)
-```
-
-### Extensions (add only when triggered)
-```
-+ engine/                       ← Never imports React
-│   ├── ecs/                    # Koota — frame loop state (position, velocity, AI)
-│   │   ├── components/         #   Pure data definitions
-│   │   ├── systems/            #   Pure logic (stateless)
-│   │   ├── queries/
-│   │   ├── prefabs/
-│   │   └── world.ts
-│   ├── ports/
-│   ├── adapters/
-│   │   └── rapier/             # Physics → ECS sync (no React)
-│   ├── physics/                ← Imperative Rapier WASM (graduate from @react-three/rapier)
-│   └── shaders/                # TSL / GLSL
-│
-+ scene/hooks/ecs/              ← Add with engine/ (inside existing scene/hooks/)
-+ scene/hooks/physics/          ← Add with engine/ (inside existing scene/hooks/)
-│
-+ domains/                      ← 2+ independent scenes/modes
-│   └── [domain-name]/
-│       ├── index.tsx           #   Domain entry point
-│       ├── use-cases/          #   Domain-specific business logic
-│       ├── systems/            #   Domain-specific ECS systems
-│       ├── stores/             #   Domain-scoped state
-│       ├── hud/                #   Domain-specific HUD elements
-│       └── config.ts           #   Domain parameters, constraints
-│
-+ networking/                   ← Multiplayer or real-time sync
-+ content/                      ← External data injected into 3D scene
-│
-+ workers/
-│   └── compute-worker.ts      # Imports bindings from wasm-out/
-│
-+ crates/                       ← Rust source (project root, Cargo workspace)
-│   └── compute/src/
-+ wasm-out/                     ← Build artifacts only (project root, gitignored)
-```
-
-### Dependency Direction
-```
-Top-level:
-
-  ┌─────────────────────────────────────────────────────┐
-  │  app/              ← framework-specific shell        │
-  │    ↓                                                │
-  │  domains/          ← composes scene + engine        │
-  │    ↓                                                │
-  │  scene/  ─reads→  engine/                           │
-  │    ↓                 ↓                              │
-  │  hud/                                               │
-  │    ↓                                                │
-  │  shared/           ← referenced by all above        │
-  └─────────────────────────────────────────────────────┘
-
-Cross-links (→ means "depends on"):
-
-  xr/           → scene/
-  networking/   → engine/
-  workers/      → engine/
-
-Bridges:
-
-  scene/hooks/ecs/     → engine/ecs/      React reads ECS (not the reverse)
-  engine/adapters/     → engine/ecs/      Physics syncs into ECS (no React)
-  domains/stores/      → scene/hooks/     Domain Zustand reads engine via bridge
-
-State ownership:
-
-  Zustand  shared/stores/         UI/meta (theme, modal, prefs)
-  Zustand  domains/[name]/stores/ Domain-scoped (editor mode, tool selection)
-  Koota    engine/ecs/            Simulation (position, velocity, AI)
-```
