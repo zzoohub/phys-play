@@ -9,12 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Monorepo Structure
 ```
-├── services/
-│   ├── api/              # Backend API
-│   └── worker/           # Queue, cron, pub/sub handlers
-├── clients/
-│   ├── web/
-│   └── mobile/           # Expo React Native
+├── api/              # Backend API
+├── web/│   
 ├── db/
 │   ├── migrations/
 │   └── seeds/
@@ -39,14 +35,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Principles & Constraints
 ### MUST
-1. All changes must use skills, including after plan mode.
-2. After implementation, check if sub-agents are needed and run in parallel:
+1. Any change to business strategy, feature specs, architecture, or user tracking must update the relevant documents in `docs/` or `biz/`.
+2. All service code changes must use skills, including after plan mode.
+3. After implementation, check if sub-agents are needed and run in parallel:
    - **z-security-reviewer**: Run when changes affect security-sensitive areas (auth, data access, API endpoints).
    - **z-verifier**: Run when changes include testable code (new/modified functions, logic branches). 
    > Skip all for docs/copy-only changes. Skip browser test if `claude-in-chrome` MCP is unavailable.
-3. Marketing content must reference `docs/product-brief.md` for consistent messaging.
-4. All user-facing events must be defined in `biz/analytics/tracking-plan.md` before implementation.
-5. Any change to architecture or feature specs must update the relevant docs in `docs/`.
 
 ### MUST NOT
 - (project-specific anti-patterns here)
@@ -69,7 +63,7 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 ## Web
 ### Web Workflow (MUST FOLLOW)
 - Design System: **z-design-system**
-- Default: **vercel-composition-patterns** (composition) → **vercel-react-best-practices** (optimization)
+
 
 ### FSD Import Rules
 - `app(routing) → views → widgets → features → entities → shared` (never import upward)
@@ -79,14 +73,3 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 - **Responsive**: Support all screen sizes.
 - **Dark mode**: Support light and dark themes.
 <!-- Add project-specific UI conventions -->
-
-## Mobile
-### Mobile Workflow
-- Design System: **z-design-system**
-- Default: **expo-app-design:building-native-ui** (implementation) → **vercel-react-native-skills** (improve)
-<!-- Add or replace sub-agent as needed -->
-
-### Mobile Conventions
-- **i18n**: All user-facing text must support en, es, pt-BR, id, ja and ko. Share translation keys with web where possible.
-- **Dark mode**: Support light and dark themes.
-<!-- Add project-specific mobile conventions -->
