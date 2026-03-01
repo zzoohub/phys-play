@@ -1,5 +1,7 @@
 # Folder Structure
 
+Each folder exposes its public API via `index.ts` barrel only. No cross-import within the same layer.
+
 ## Web (Nextjs)
 ```
 app/                 # Next.js App Router — routing only (thin re-exports)
@@ -29,9 +31,12 @@ src/                 # All FSD layers
 │       └── api/
 └── shared/          # Reusable infrastructure
     ├── ui/          # Design system
-    ├── lib/         # Utilities, helpers
     ├── api/         # API client
-    └── config/      # Environment, constants
+    ├── lib/         # Utilities, helpers
+    ├── hooks/       # Shared hooks
+    ├── stores/      # Global state (auth, theme)
+    ├── types/       # Shared types
+    └── constants/   # Environment, constants
 ```
 
 - Root `app/` is for Next.js routing only. `src/` holds all FSD layers.
@@ -60,9 +65,12 @@ src/
 │       └── api/
 └── shared/          # Reusable infrastructure
     ├── ui/          # Design system
-    ├── lib/         # Utilities, helpers
     ├── api/         # API client
-    └── config/      # Environment, constants
+    ├── lib/         # Utilities, helpers
+    ├── hooks/       # Shared hooks
+    ├── stores/      # Global state (auth, theme)
+    ├── types/       # Shared types
+    └── constants/   # Environment, constants
 ```
 
 
@@ -84,7 +92,7 @@ Applications where 2D web pages and 3D/XR content coexist. Same structure applie
 ```
 src/
 ├── app/                          # App shell & routing (framework-specific)
-│   └── ...                       #   Rule: imports downward only
+│   └── ...                       #   Routes to site/ (2D pages) or domains/ (3D experiences)
 │
 ├── site/                         # 2D layer (FSD)
 │   ├── pages/                    #   Page compositions (landing, dashboard)
@@ -93,7 +101,7 @@ src/
 │   ├── entities/                 #   Business entities (user, product, order)
 │   └── shared/
 │       ├── ui/                   #   Design system
-│       ├── api/                  #   HTTP client
+│       ├── api/                  #   2D-specific API utilities
 │       ├── hooks/                #   DOM hooks
 │       └── lib/                  #   2D utilities
 │
@@ -117,19 +125,19 @@ src/
 │   │   └── spaces/
 │   └── shared/
 │       ├── hooks/                #   R3F hooks
-│       ├── utils/                #   Three.js utilities
+│       ├── lib/                  #   Three.js utilities
 │       └── assets/               #   glTF, KTX2 textures, audio
 │
 └── shared/                       # Global shared (referenced by all layers)
-    ├── types/                    #   Cross-layer types (User, Config, etc.)
+    ├── ui/                       #   Cross-layer UI primitives (loading, error boundary)
+    ├── api/                      #   HTTP client, interceptors, base URL
+    ├── lib/                      #   Utilities, helpers
+    ├── hooks/
     ├── stores/                   #   Cross-layer state (auth, prefs, etc.)
     │   └── ...                   #     Rule: never imports site/, experience/, engine/, domains/
-    ├── constants/
-    ├── hooks/
-    └── utils/
+    ├── types/                    #   Cross-layer types (User, Config, etc.)
+    └── constants/
 ```
-
-Each folder exposes public API via index.ts barrel only. No cross-import within same layer.
 
 Store scoping guide:
 
@@ -139,6 +147,7 @@ Store scoping guide:
 | `domains/[name]/stores/` | Domain-scoped state for a specific domain | editor mode, tool selection, active params |
 | `site/shared/` | 2D-only state | form drafts, table sort/filter |
 | `experience/shared/` | 3D-only state | camera mode, render quality |
+| `engine/ecs/` | Simulation state (Koota) | position, velocity, forces |
 
 ### Extensions (add only when triggered)
 ```
@@ -155,8 +164,8 @@ Store scoping guide:
 │   ├── physics/                  ←   Imperative Rapier (graduate from @react-three/rapier)
 │   └── shaders/                  #   TSL / GLSL
 │
-+ experience/scene/hooks/ecs/     ← Add with engine/. Koota → R3F read-only bridge
-+ experience/scene/hooks/physics/ ← Add with engine/. Rapier state reads for R3F
++ experience/scene/hooks/ecs/     ← Add with engine/ (inside existing scene/hooks/)
++ experience/scene/hooks/physics/ ← Add with engine/ (inside existing scene/hooks/)
 │
 + domains/                        ← 2+ independent areas with custom logic/state
 │   └── [domain-name]/
@@ -187,8 +196,8 @@ Top-level:
   │    ↓                                                     │
   │  domains/          ← composes experience + engine        │
   │    ↓                                                     │
-  │  experience/  ←bridge→  engine/                          │
-  │    ↓                      ↓                              │
+  │  experience/  ─reads→  engine/                           │
+  │    ↓                     ↓                               │
   │  shared/           ← referenced by all above             │
   │                                                          │
   │  app/ → site/ → shared/  (independent 2D branch)         │
@@ -197,6 +206,8 @@ Top-level:
 
 Within experience/:
 
+  canvas/           ← Renderer setup, Canvas entry point
+    ↓
   scene/            ← R3F components
     ↓
   hud/              ← mesh + HTML HUD components
@@ -209,7 +220,7 @@ Cross-links (→ means "depends on"):
   networking/       → engine/
   workers/          → engine/
 
-Bridges (engine ↔ experience):
+Bridges:
 
   experience/scene/hooks/ecs/   → engine/ecs/    React reads ECS (not the reverse)
   engine/adapters/              → engine/ecs/    External systems sync into ECS
@@ -251,6 +262,8 @@ State ownership:
 
 3D/XR-only applications. No or minimal 2D web pages.
 
+**Stack**: Three.js (WebGPU-first) · React Three Fiber · Drei · TSL shaders · @react-three/xr · Koota ECS · Rapier WASM · Zustand · Rust WASM · glTF
+
 ### Base Structure
 ```
 src/
@@ -280,16 +293,15 @@ src/
 │   └── spaces/
 │
 └── shared/                     # Referenced by all layers above
-    ├── ui/                     # Thin DOM UI (settings modal, loading screen)
+    ├── ui/                     # DOM overlay outside Canvas (settings modal, loading screen)
+    ├── api/                    # HTTP client, interceptors, base URL
+    ├── lib/                    # Utilities, helpers
+    ├── hooks/
     ├── stores/                 # Zustand — UI/meta (theme, modal, prefs)
     ├── types/
     ├── constants/
-    ├── hooks/
-    ├── utils/
-    └── assets/                 # glTF, textures, audio
+    └── assets/                 # glTF, textures, audio (in experience/shared/ for 2D+3D)
 ```
-
-Each folder exposes public API via index.ts barrel only. No cross-import within same layer.
 
 ### Extensions (add only when triggered)
 ```
@@ -306,8 +318,8 @@ Each folder exposes public API via index.ts barrel only. No cross-import within 
 │   ├── physics/                ← Imperative Rapier WASM (graduate from @react-three/rapier)
 │   └── shaders/                # TSL / GLSL
 │
-+ scene/hooks/ecs/              ← Add with engine/. Koota → R3F read-only bridge
-+ scene/hooks/physics/          ← Add with engine/. Rapier state reads for R3F
++ scene/hooks/ecs/              ← Add with engine/ (inside existing scene/hooks/)
++ scene/hooks/physics/          ← Add with engine/ (inside existing scene/hooks/)
 │
 + domains/                      ← 2+ independent scenes/modes
 │   └── [domain-name]/
@@ -338,7 +350,7 @@ Top-level:
   │    ↓                                                │
   │  domains/          ← composes scene + engine        │
   │    ↓                                                │
-  │  scene/  ←bridge→  engine/                          │
+  │  scene/  ─reads→  engine/                           │
   │    ↓                 ↓                              │
   │  hud/                                               │
   │    ↓                                                │
