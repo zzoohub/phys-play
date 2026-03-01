@@ -160,7 +160,7 @@ Store scoping guide:
 │
 + domains/                        ← 2+ independent areas with custom logic/state
 │   └── [domain-name]/
-│       ├── Scene.tsx             #   Composes scene + engine + hud (3D-centric)
+│       ├── index.tsx             #   Domain entry point (composes scene + engine + hud)
 │       ├── use-cases/            #   Domain-specific business logic
 │       ├── systems/              #   Domain-specific ECS systems
 │       ├── stores/               #   Domain-scoped state
@@ -187,11 +187,12 @@ Top-level:
   │    ↓                                                     │
   │  domains/          ← composes experience + engine        │
   │    ↓                                                     │
-  │  engine/           ← pure logic, never imports React     │
-  │    ↓                                                     │
-  │  site/    experience/    ← NEVER import each other       │
-  │    ↓         ↓                                           │
+  │  experience/  ←bridge→  engine/                          │
+  │    ↓                      ↓                              │
   │  shared/           ← referenced by all above             │
+  │                                                          │
+  │  app/ → site/ → shared/  (independent 2D branch)         │
+  │  site/ ✕ experience/     (NEVER import each other)       │
   └──────────────────────────────────────────────────────────┘
 
 Within experience/:
@@ -210,7 +211,7 @@ Cross-links (→ means "depends on"):
 
 Bridges (engine ↔ experience):
 
-  experience/scene/hooks/ecs/   → engine/ecs/    R3F reads ECS (read-only)
+  experience/scene/hooks/ecs/   → engine/ecs/    React reads ECS (not the reverse)
   engine/adapters/              → engine/ecs/    External systems sync into ECS
   domains/                      → engine/        Domain composes engine systems
   domains/                      → experience/    Domain composes scene + hud
@@ -312,7 +313,7 @@ Each folder exposes public API via index.ts barrel only. No cross-import within 
 │   └── [domain-name]/
 │       ├── use-cases/
 │       ├── stores/             # Domain-scoped Zustand (reads engine via scene/hooks/)
-│       ├── Scene.tsx
+│       ├── index.tsx              # Domain entry point
 │       ├── config.ts
 │       └── ui/
 │
