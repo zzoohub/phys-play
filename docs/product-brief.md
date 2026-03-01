@@ -207,4 +207,4 @@
 
 ---
 
-*Appendix: [PRD](./prd.md) | [MVP PRD](./mvp-prd.md) | [Curriculum](../content/curriculum/)*
+*Appendix: [PRD](./prd.md) | [MVP PRD](./prd-mvp.md) | [Curriculum](../content/curriculum/)*
