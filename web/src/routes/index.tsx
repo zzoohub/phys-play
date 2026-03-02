@@ -1,11 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { LandingPage } from "#/site/views";
 
-export const Route = createFileRoute('/')({ component: Home })
-
-function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-2xl font-bold">phys-play</h1>
-    </main>
-  )
-}
+export const Route = createFileRoute("/")({ component: LandingPage });
