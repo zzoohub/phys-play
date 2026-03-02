@@ -57,9 +57,9 @@ src/app/
 
 ---
 
-## Web & Mobile
+## Next.js & Expo
 
-Standard 2D apps following Feature-Sliced Design.
+Standard 2D apps following Feature-Sliced Design. Both use `src/app/` as the router with co-located app-layer.
 
 ```
 src/
@@ -104,20 +104,22 @@ src/
 ├── app/
 ├── routes/
 │
-├── scene/                      # 3D world (R3F components)
+├── scene/                      # R3F components
+│   ├── canvas.tsx              # WebGPU detect → WebGL fallback
 │   ├── objects/
-│   ├── environments/
+│   ├── environments/           # Lighting, skybox, post-processing
 │   ├── cameras/
 │   ├── materials/              # WebGPU/WebGL branching per material
 │   ├── hooks/
 │   └── helpers/
 │
-├── hud/                        # In-scene UI
-│   ├── controls/               # Slider, Toggle, Button (mesh + HTML adaptive)
+├── hud/                        # In-scene UI (mesh + HTML adaptive)
+│   ├── controls/
 │   ├── overlays/
 │   └── panels/
 │
 ├── xr/                         # WebXR (omit if not needed)
+│   ├── session.tsx
 │   ├── controllers/
 │   ├── interactions/
 │   └── spaces/
@@ -127,7 +129,7 @@ src/
     ├── api/
     ├── lib/
     ├── hooks/
-    ├── stores/                 # Zustand — UI/meta (theme, modal, prefs)
+    ├── stores/                 # Zustand — theme, modal, prefs
     ├── types/
     ├── constants/
     └── assets/                 # glTF, textures, audio
@@ -195,20 +197,21 @@ src/
 │       ├── hooks/
 │       └── lib/
 │
-├── experience/                   # 3D layer (R3F + Three.js)
-│   ├── canvas/                   # WebGPURenderer → WebGLRenderer fallback
+├── experience/                   # 3D layer
+│   ├── canvas/                   # WebGPU detect → WebGL fallback
 │   ├── scene/
 │   │   ├── objects/
-│   │   ├── environments/
+│   │   ├── environments/         # Lighting, skybox, post-processing
 │   │   ├── cameras/
-│   │   ├── materials/
+│   │   ├── materials/            # WebGPU/WebGL branching per material
 │   │   ├── hooks/
 │   │   └── helpers/
-│   ├── hud/
+│   ├── hud/                      # In-scene UI (mesh + HTML adaptive)
 │   │   ├── controls/
 │   │   ├── overlays/
 │   │   └── panels/
 │   ├── xr/
+│   │   ├── session.tsx
 │   │   ├── controllers/
 │   │   ├── interactions/
 │   │   └── spaces/
