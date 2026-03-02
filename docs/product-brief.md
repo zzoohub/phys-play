@@ -159,23 +159,16 @@ URL을 열면 회원가입/트랙 선택 없이 바로 "공 던지기" 챌린지
 
 ---
 
-## 3. Assumptions, Risks & Dependencies
+## 3. Key Bets
 
-| Assumption / Risk | Type | Impact | How We'll Address It |
-|-------------------|------|--------|---------------------|
-| "예측→실험→발견" 루프가 자유 탐색보다 학습 효과가 높다 | Value | High | A/B 테스트: 자유 탐색 vs 예측 루프 모드, 사전/사후 이해도 비교 (n=20) |
-| 게이미피케이션 구조가 과학 교육의 진지함을 해치지 않는다 | Value | High | Discovery 중 교사 5명 인터뷰 + "게임 같은 과학 수업"에 대한 인식 확인 |
-| 예측 참여가 학습 동기(다음 모듈 진행)를 실제로 높인다 | Value | High | Phase 1에서 모듈 완주율 측정 (목표: 40%) |
-| 3D 인터랙션이 2D 다이어그램보다 개념 이해도를 높인다 | Value | High | 사용자 테스트에서 사전/사후 이해도 비교 |
-| 엔진 기반 변수 조합 챌린지가 수동 제작 챌린지만큼 교육 효과가 있다 | Value | Medium | Phase 1에서 수동 설계 챌린지 vs 변수 조합 챌린지 비교 |
-| 적응형 난이도 AI가 1인 개발로 구현 가능한 수준이다 | Feasibility | Medium | Phase 1은 규칙 기반 분기로 시작, AI 모델은 Phase 2+에서 도입 |
-| 브라우저에서 물리 시뮬레이션을 60fps로 구동할 수 있다 | Feasibility | High | 물체 던지기 + 롤러코스터 프로토타입 eng spike (2주) |
-| God Hand 테이블탑 모델이 웹↔XR 전환에서 일관된 경험을 제공한다 | Feasibility | Medium | Discovery에서 물체 던지기 프로토타입으로 웹/XR 양쪽 테스트 |
-| 3D/XR 동일 코드베이스로 Progressive XR 구조를 유지할 수 있다 | Feasibility | Medium | XR 모드 전환 프로토타입 검증 (Discovery) |
-| 무료 웹 접근만으로 유의미한 트래픽을 확보할 수 있다 | Viability | High | 출시 후 1개월 내 10K UV 달성 여부로 판단 |
-| B2B 교육 시장의 의사결정 사이클이 짧지 않을 수 있다 | Viability | Medium | 무료 B2C + 교사 개인 단위 접근 병행 |
-| XR 브라우저 지원 수준이 브라우저별로 다름 | Dependency | Medium | 3D First — XR은 보너스, 3D가 기본 |
-| PDB, NASA API 등 외부 데이터 소스의 안정성과 라이선스 | Dependency | Low | Phase 2+ 진입 전 라이선스 검토, 캐싱/폴백 구현 |
+이것이 틀리면 프로젝트가 성립하지 않는 핵심 가정 4개. 전체 가정/리스크 목록은 [PRD — Assumptions](./prd.md#15-assumptions-risks--dependencies)를 참조.
+
+| Bet | How We'll Test It |
+|-----|-------------------|
+| "예측→실험→발견" 루프가 자유 탐색보다 학습 효과와 동기를 높인다 | A/B 테스트 (자유 탐색 vs 예측 루프), 예측 참여율 70% · 완주율 40% 달성 여부 |
+| 게이미피케이션 구조가 과학 교육의 진지함을 해치지 않는다 | Discovery 중 교사 5명 인터뷰 + "게임 같은 과학 수업"에 대한 인식 확인 |
+| 브라우저에서 물리 시뮬레이션을 60fps로 구동할 수 있다 | 투사체 + 롤러코스터 프로토타입 eng spike (2주) |
+| 무료 웹 접근만으로 유의미한 트래픽을 확보할 수 있다 | 출시 후 1개월 내 10K UV 달성 여부로 판단 |
 
 ---
 
@@ -243,17 +236,6 @@ URL을 열면 회원가입/트랙 선택 없이 바로 "공 던지기" 챌린지
 - [ ] 공간 해금 조건의 설계 원칙은? (클리어 기반? 정확도 기반? 시간 기반?)
 
 구현 레벨 질문은 [PRD — Open Questions](./prd.md#14-open-questions) 참조.
-
----
-
-## 8. Team & Stakeholders
-
-| Role | Person | Responsibility |
-|------|--------|---------------|
-| PM (Driver) | — | 제품 방향, 게이미피케이션 설계, 교육 시장 리서치 |
-| 3D/XR Engineer | — | 시뮬레이션 엔진, 3D 렌더링, XR, God Hand 인터랙션 |
-| Design | — | UX/인터랙션 설계, 공간 테마 디자인, 챌린지 경험 설계 |
-| Growth | — | 바이럴 전략, 커뮤니티, B2B 파일럿 |
 
 ---
 
