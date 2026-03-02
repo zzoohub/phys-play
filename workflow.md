@@ -14,8 +14,8 @@ z-product-brief                       → docs/product-brief.md
 z-prd-craft                           → docs/prd.md
 z-ux-designer                         → docs/ux-design.md
   + Stitch (parallel)               → visual mockups
-frontend-design                       → UI implementation
-Review & approve
+UI implementation
+Review feature and UX — revise upstream docs if needed
 ```
 
 ---
