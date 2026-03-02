@@ -1,13 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { LandingView } from '#/site/views/landing'
 
 export const Route = createFileRoute('/')({
-  component: Home,
+  component: LandingView,
 })
-
-function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Phys Play</h1>
-    </main>
-  )
-}

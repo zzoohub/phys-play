@@ -4,9 +4,12 @@ Each folder exposes its public API via `index.ts` barrel only. No cross-import w
 
 ## Web & Mobile
 
-`src/app/` is the FSD app-layer: providers, global styles, and routing. Route files are thin wrappers that import views.
+App-layer is the top-level FSD layer for app-wide concerns — providers, global styles, and initialization logic. Route files are thin wrappers that import views. The app-layer and routing location varies by framework:
 
-### `src/app/` internals (framework-specific)
+- **Next.js / Expo Router**: `src/app/` is the framework router — FSD app-layer concerns (providers, styles) are co-located here
+- **TanStack Start**: Routing (`src/routes/`) and FSD app-layer (`src/app/`) are separate directories
+
+### App-layer internals (framework-specific)
 
 **Next.js** (`src/app/`):
 ```
@@ -19,18 +22,19 @@ src/app/
 └── providers/
 ```
 
-**TanStack Start** (`src/app/`):
+**TanStack Start**:
 ```
-src/app/
-├── routes/          # File-based routing (TanStack Router)
-│   ├── __root.tsx   # Root layout
-│   ├── index.tsx    # Home (/) — import from @/views/
+src/
+├── app/             # FSD app-layer (providers, global styles)
+│   ├── providers.tsx
+│   └── styles.css
+├── routes/          # File-based routing (TanStack Router, thin wrappers)
+│   ├── __root.tsx   # Root layout — imports from app/providers
+│   ├── index.tsx    # Home (/) — import from views/
 │   └── some-page/
 │       └── index.tsx
 ├── router.tsx       # Router configuration
-├── routeTree.gen.ts # Auto-generated route tree
-├── globals.css
-└── providers/
+└── routeTree.gen.ts # Auto-generated route tree
 ```
 
 **Expo Router** (`src/app/`):
@@ -81,19 +85,24 @@ src/
 **Stack**: Three.js (WebGPU-first) · React Three Fiber · Drei · TSL shaders · @react-three/xr · Koota ECS · Rapier WASM · Zustand · Rust WASM · glTF
 
 ### Base Structure
+
+App-layer (providers, global styles) and routing location varies by framework:
+- **Next.js / Expo Router**: `src/app/` handles routing, providers, and styles together
+- **TanStack Start**: `src/app/` for providers and styles (FSD app-layer), `src/routes/` for routing (framework convention)
+
 ```
 src/
-├── app/                        # App shell & routing (framework-specific, internals vary)
-│   └── ...                     #   Rule: imports downward only. Nothing below imports app/.
+├── app/                        # FSD app-layer: providers, global styles
+│   ├── providers.tsx           #   Context providers composition
+│   └── styles.css              #   Global styles
+├── routes/                     # Routing (framework-specific, thin wrappers)
+│   └── ...                     #   Rule: imports downward only. Nothing below imports routes/.
 │
 ├── scene/                      # 3D world (R3F components)
-│   ├── canvas.tsx              # WebGPU detect → WebGL fallback
 │   ├── objects/
 │   ├── environments/           # Lighting, skybox, post-processing
 │   ├── cameras/
-│   ├── materials/
-│   │   ├── create-material.ts  # Factory: (type, renderer) → Material
-│   │   └── *.ts                # Each file handles its own WebGPU/WebGL branch
+│   ├── materials/              # WebGPU/WebGL branching per material
 │   ├── hooks/                  # Scene-level hooks (add ecs/, physics/ with engine)
 │   └── helpers/
 │
@@ -103,7 +112,6 @@ src/
 │   └── panels/                 # Grouped control panels
 │
 ├── xr/                         # WebXR (omit if not needed)
-│   ├── session.tsx
 │   ├── controllers/
 │   ├── interactions/
 │   └── spaces/
@@ -162,7 +170,7 @@ src/
 Top-level:
 
   ┌─────────────────────────────────────────────────────┐
-  │  app/              ← framework-specific shell        │
+  │  app/ + routes/    ← providers + routing shell       │
   │    ↓                                                │
   │  domains/          ← composes scene + engine        │
   │    ↓                                                │
@@ -219,9 +227,15 @@ Extends the 3D structure above with a `site/` layer for 2D web pages. The 3D lay
 **Core rule: `site/` and `experience/` NEVER import each other.** Cross-layer data flows through `shared/` stores.
 
 ### Base Structure
+
+App-layer (providers, global styles) and routing location varies by framework (see Web & Mobile section above for details).
+
 ```
 src/
-├── app/                          # App shell & routing (framework-specific)
+├── app/                          # FSD app-layer: providers, global styles
+│   ├── providers.tsx
+│   └── styles.css
+├── routes/                       # Routing (framework-specific, thin wrappers)
 │   └── ...                       #   Routes to site/ (2D pages) or domains/ (3D experiences)
 │
 ├── site/                         # 2D layer (FSD)
@@ -322,7 +336,7 @@ Store scoping guide:
 Top-level:
 
   ┌──────────────────────────────────────────────────────────┐
-  │  app/              ← routing shell                        │
+  │  app/ + routes/    ← providers + routing shell            │
   │    ↓                                                     │
   │  domains/          ← composes experience + engine        │
   │    ↓                                                     │
@@ -330,7 +344,7 @@ Top-level:
   │    ↓                     ↓                               │
   │  shared/           ← referenced by all above             │
   │                                                          │
-  │  app/ → site/ → shared/  (independent 2D branch)         │
+  │  routes/ → site/ → shared/  (independent 2D branch)      │
   │  site/ ✕ experience/     (NEVER import each other)       │
   └──────────────────────────────────────────────────────────┘
 
