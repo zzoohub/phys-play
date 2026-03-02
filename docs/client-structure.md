@@ -221,7 +221,6 @@ src/
 │       └── assets/               # glTF, KTX2 textures, audio
 │
 └── shared/                       # Global (referenced by all layers)
-    ├── ui/
     ├── api/
     ├── lib/
     ├── hooks/
