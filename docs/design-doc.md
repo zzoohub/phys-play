@@ -62,7 +62,7 @@ system.web -> sentry: "Errors + perf\n(HTTPS)"
 cdn -> system.web: "Static assets\n(glTF, textures, audio)"
 ```
 
-Phase 1 is entirely client-side. No backend API, no database server, no user accounts. All state lives in the browser (IndexedDB). The only external integrations are analytics (PostHog) and error tracking (Sentry).
+Phase 1 is entirely client-side. No backend API, no database server, no user accounts. All state lives in the browser (SQLite WASM + OPFS). The only external integrations are analytics (PostHog) and error tracking (Sentry).
 
 Phase 3+ adds: Rust (Axum) API on Cloud Run, Neon PostgreSQL, user accounts, and progress sync.
 
@@ -73,7 +73,7 @@ Phase 3+ adds: Rust (Axum) API on Cloud Run, Neon PostgreSQL, user accounts, and
 | A1 | WebGPU is available on 60%+ of target users' browsers by launch; WebGL fallback covers the rest | Must invest more in WebGL rendering path quality |
 | A2 | Rapier WASM can run projectile + collision physics at 60fps on mid-range laptops | Need custom lightweight physics solver or reduce simulation fidelity |
 | A3 | Wave equation solver runs acceptably in a Web Worker without Rust WASM | Must add custom Rust WASM solver for wave engine |
-| A4 | IndexedDB storage is sufficient for Phase 1 progress data (<5MB per user) | Need to prune old data or compress |
+| A4 | OPFS is available on target browsers (Chrome 86+, Firefox 111+, Safari 15.2+) and sufficient for Phase 1 progress data | Must fall back to IndexedDB VFS; may lose SQL query performance |
 | A5 | TanStack Start SSR on Cloudflare Workers provides adequate SEO for the landing page | Need prerendering or move to static export for marketing pages |
 | A6 | A single-person team can ship 3 engines + 26 challenges in 12 weeks | Must cut to 2 engines or reduce challenge count |
 
@@ -90,7 +90,7 @@ Phase 3+ adds: Rust (Axum) API on Cloud Run, Neon PostgreSQL, user accounts, and
 - Core loop state machine (Predict → Play → Discover) is engine-agnostic — new engines plug in without modifying the loop
 - Input abstraction (God Hand) maps mouse, touch, and hand tracking through a single interface — XR mode requires no simulation code changes
 - Offline-capable: all simulations run without network after initial load
-- Client-side adaptive engine selects next challenges based on user performance history stored in IndexedDB
+- Client-side adaptive engine selects next challenges based on user performance history stored in SQLite (OPFS)
 
 ### 2.2 Non-Goals
 
@@ -117,7 +117,7 @@ Phase 3+ adds: Rust (Axum) API on Cloud Run, Neon PostgreSQL, user accounts, and
 
 **Code structure**: Hexagonal thinking applied at both levels:
 - **Engine layer**: Physics backends (Rapier, custom solvers) are adapters behind ports. The ECS and simulation engines depend on port interfaces, not concrete physics libraries.
-- **Client layer**: Local storage (IndexedDB) and analytics (PostHog) are adapters. Domain logic (core loop, adaptive engine) uses port interfaces, making it trivial to swap IndexedDB for an API client in Phase 3.
+- **Client layer**: Local storage (SQLite WASM + OPFS) and analytics (PostHog) are adapters. Domain logic (core loop, adaptive engine) uses port interfaces, making it trivial to swap SQLite for an API client in Phase 3 — and the SQL schema transfers directly to Neon PostgreSQL.
 
 **Frontend**: TanStack Start on Cloudflare Workers. TanStack Start is already established in the codebase. Cloudflare Workers provides edge delivery with near-zero cold starts — ideal for a content-heavy interactive app. SSR handles the landing page for SEO; the 3D experience is client-rendered.
 
@@ -167,8 +167,8 @@ browser: {
     }
   }
 
-  idb: {
-    label: "IndexedDB"
+  sqlite: {
+    label: "SQLite WASM\n(OPFS)"
     shape: cylinder
     style.fill: "#e0e7ff"
   }
@@ -203,7 +203,7 @@ r2 -> browser.main.r3f: "glTF, textures, audio\n(HTTPS)"
 browser.main.app -> browser.main.r3f: "Route-driven scene loading"
 browser.main.r3f -> browser.main.ecs: "Render reads ECS state"
 browser.main.ecs -> browser.worker.physics: "Physics step (postMessage)"
-browser.main.zustand -> browser.idb: "Persist progress"
+browser.main.zustand -> browser.sqlite: "Persist progress\n(SQL via Worker)"
 browser.main.app -> posthog: "Analytics events"
 browser.main.app -> sentry: "Errors"
 ```
@@ -219,7 +219,7 @@ browser.main.app -> sentry: "Errors"
 | Rust WASM Compute | Custom crates → wasm-pack | CPU-bound computation offload: wave equation solver, large-scale particle systems, prediction trajectory calculation. Compiled from `crates/` to `wasm-out/`. Loaded in Web Worker alongside Rapier |
 | XR Layer | @react-three/xr | [Phase 2+] WebXR session management, hand tracking input mapping. Same R3F scene graph — input adapters swap from mouse/touch to hand tracking |
 | 3D Assets | glTF 2.0 (Draco-compressed) + KTX2 textures | Standard 3D asset format. Draco for geometry compression, KTX2 for GPU-compressed textures. Loaded via Drei's `useGLTF` |
-| IndexedDB | idb (wrapper) | User progress, prediction history, adaptive engine state |
+| SQLite WASM + OPFS | @sqlite.org/sqlite-wasm via sqlocal | User progress, prediction history, adaptive engine state. Runs in dedicated Worker with OPFS SyncAccessHandle for fast I/O |
 | Cloudflare Workers | Vinxi/Nitro on Workers | Edge SSR, static asset serving, i18n routing |
 | Cloudflare R2 | S3-compatible object storage | Large static assets (skybox textures, audio, glTF models) |
 
@@ -263,7 +263,8 @@ src/
 │   └── concepts/     # Discover-phase concept library
 │
 └── shared/           # Cross-layer (site + experience)
-    ├── stores/       # Auth [Phase 3+], theme, language, user progress
+    ├── stores/       # Auth [Phase 3+], theme, language
+    ├── db/           # SQLite WASM + OPFS client database (user progress, adaptive state)
     ├── i18n/         # en/ko translations
     ├── types/        # Shared type definitions
     └── constants/    # Feature flags, config
@@ -318,7 +319,7 @@ Adding a new engine (e.g., molecular in Phase 3) means: create a new folder, imp
 ```
 1. User enters station → Domain loads challenge JSON for current engine
 2. Adaptive Selector picks next challenge from pool
-   - Reads: user progress (IndexedDB), challenge pool (static JSON)
+   - Reads: user progress (SQLite), challenge pool (static JSON)
    - Filters: difficulty range, weak tags, variety rules
 3. [Predict] HUD renders prediction UI (type from challenge JSON)
    → User submits prediction → stored in memory
@@ -328,7 +329,7 @@ Adding a new engine (e.g., molecular in Phase 3) means: create a new folder, imp
 5. [Discover] Core loop compares prediction vs result
    → Loads concept explanation (from concept library JSON)
    → Depth level selected by adaptive engine
-6. Challenge complete → progress written to IndexedDB
+6. Challenge complete → progress written to SQLite (OPFS)
    → Adaptive Selector re-evaluates → next challenge
 ```
 
@@ -336,17 +337,17 @@ Adding a new engine (e.g., molecular in Phase 3) means: create a new folder, imp
 
 ```
 1. URL open → Cloudflare Workers serves SSR landing HTML
-2. Client hydrates → router detects no progress in IndexedDB
+2. Client hydrates → router detects no progress in SQLite
 3. Auto-navigate to mechanics-lab/projectile/challenge-1
 4. Reduced HUD — minimal UI, guided prediction
 5. After first challenge → hub route → show full space map
-6. Progress initialized in IndexedDB
+6. Progress initialized in SQLite (OPFS)
 ```
 
 **Flow 3: Returning User**
 
 ```
-1. URL open → read progress from IndexedDB
+1. URL open → read progress from SQLite (OPFS)
 2. Show hub (2D) with unlocked/locked spaces
 3. User selects space → portal transition → 3D experience loads
 4. Resume from last position in station
@@ -360,8 +361,8 @@ Adding a new engine (e.g., molecular in Phase 3) means: create a new folder, imp
 |-------|-----------|------|-------------|-----------|
 | Challenge definitions | Static JSON (bundled, code-split per engine) | Engine params, prediction types, metadata, difficulty tags | Immutable (shipped with build) | Challenges are content — they don't change at runtime. Code-splitting per engine keeps initial bundle small |
 | Concept library | Static JSON (bundled) | Discover explanations at 3 depth levels, per concept ID | Immutable | Same rationale as challenges |
-| User progress | IndexedDB via `idb` | Per-challenge results, per-tag accuracy, streak, difficulty level, unlocked stations | Strong (single client) | Only writable store in Phase 1. ~2-5KB per user |
-| UI preferences | IndexedDB or localStorage | Theme, language, audio volume, render quality | Strong (single client) | Small key-value data |
+| User progress | SQLite WASM + OPFS via `sqlocal` | Per-challenge results, per-tag accuracy, streak, difficulty level, unlocked stations | Strong (single client) | Relational data — adaptive engine queries (tag별 정확도 정렬, difficulty 필터, 최근 완료 제외) are natural SQL. Phase 3에서 Neon PostgreSQL로 스키마 1:1 마이그레이션. SQLite Worker는 기존 physics Worker 패턴과 일관됨 |
+| UI preferences | localStorage | Theme, language, audio volume, render quality | Strong (single client) | Small key-value data — SQL 불필요 |
 | Asset cache | Service Worker + Cache API | glTF models, textures, audio files | Cache-first | Enables offline simulation after first load |
 
 #### Phase 3+: Backend Storage [Phase 3+]
@@ -369,11 +370,11 @@ Adding a new engine (e.g., molecular in Phase 3) means: create a new folder, imp
 | Store | Technology | Data | Consistency |
 |-------|-----------|------|-------------|
 | User accounts | Neon PostgreSQL | Profile, auth tokens, subscription | Strong |
-| Progress sync | Neon PostgreSQL | Replicated from client IndexedDB | Eventual (client-first, sync on connectivity) |
+| Progress sync | Neon PostgreSQL | Replicated from client SQLite | Eventual (client-first, sync on connectivity) |
 | Challenge metadata | Neon PostgreSQL | Challenge pool with server-managed difficulty tuning | Strong |
 | Static assets | Cloudflare R2 | glTF, textures, audio, skyboxes | Immutable (versioned) |
 
-The Phase 3 migration strategy: IndexedDB remains the primary write target. A sync adapter periodically pushes local changes to the API when online. Conflict resolution: last-write-wins (progress data is append-only in nature — a user can't "un-complete" a challenge).
+The Phase 3 migration strategy: Client SQLite remains the primary write target (offline-first). A sync adapter periodically pushes local changes to the API when online. The SQLite schema maps 1:1 to Neon PostgreSQL tables — no data model translation needed. Conflict resolution: last-write-wins (progress data is append-only in nature — a user can't "un-complete" a challenge).
 
 ### 4.3 Content Pipeline
 
@@ -485,7 +486,7 @@ Phase 3+ auth strategy (per infra preferences):
 |---------|--------|----------|
 | WebGPU unavailable | Degraded visuals | Auto-fallback to WebGLRenderer. Materials branch per renderer. Log to analytics |
 | Physics simulation divergence (NaN, explosion) | Broken simulation | Detect NaN in ECS position/velocity → reset to last stable state → show "simulation reset" toast |
-| IndexedDB write failure | Progress loss | Retry with exponential backoff (3 attempts). If persistent, fall back to in-memory + warn user |
+| SQLite/OPFS write failure | Progress loss | Retry with exponential backoff (3 attempts). If OPFS unavailable (older browser), fall back to IndexedDB VFS. If all fail, in-memory + warn user |
 | Asset load failure (glTF, texture) | Missing visuals | Retry once. On failure, use fallback primitive geometry + solid color material |
 | Web Worker crash | Physics stops | Respawn worker, re-initialize physics world from ECS snapshot |
 | Engine-specific system error | One engine broken | Isolate per engine. Other engines/stations remain functional |
@@ -528,7 +529,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 | Cloudflare R2 | 1 | HTTPS (public bucket) | Large static assets (skyboxes, audio) | Asset unavailable | Fallback primitives + cached versions via Service Worker |
 | NASA Open API | 4 | HTTPS (REST) | Real planet/orbit data for 우주 관측소 | API down or rate-limited | Use bundled default solar system data |
 | PDB / PubChem | 3 | HTTPS (REST) | Real molecular structure data for 분자 실험실 | API down | Use curated set of bundled molecular data |
-| Neon PostgreSQL | 3+ | TCP (pg protocol) | User accounts, progress sync, challenge metadata | DB connection failure | Client continues with IndexedDB only. Sync when restored |
+| Neon PostgreSQL | 3+ | TCP (pg protocol) | User accounts, progress sync, challenge metadata | DB connection failure | Client continues with local SQLite only. Sync when restored |
 
 ---
 
@@ -541,7 +542,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 | Wave engine custom solver can't achieve 60fps in JS Web Worker | High | Medium | Profile early in Discovery. If JS is insufficient, port solver to Rust WASM. Wave engine is the most computationally demanding of the 3 Phase 1 engines |
 | WebGPU fallback to WebGL produces visually unacceptable results | Medium | Low | Material branching per renderer (defined in client-structure.md). Test both paths for every material. Accept minor visual differences; ensure no functional difference |
 | Three.js + R3F memory leaks on repeated scene transitions | Medium | Medium | Strict disposal in engine cleanup. Monitor heap size in CI performance tests. Use `useEffect` cleanup consistently for R3F components |
-| IndexedDB blocked or unavailable (private browsing, storage pressure) | Medium | Low | Detect at startup. Fall back to in-memory storage with "progress won't be saved" warning |
+| OPFS unavailable (older browser, private browsing) | Medium | Low | Detect at startup. Fall back to IndexedDB VFS for SQLite. If IndexedDB also fails, in-memory storage with "progress won't be saved" warning |
 | Koota ECS + Rapier WASM interop overhead via postMessage | Medium | Medium | Profile message serialization cost. If too high, explore SharedArrayBuffer (requires COOP/COEP headers). Alternative: run Rapier on main thread with stepped simulation |
 | TanStack Start SSR + Three.js hydration conflicts | Low | Medium | 3D components are client-only (`"use client"` boundary). SSR only renders 2D shell. R3F canvas is mounted after hydration |
 | Brotli/gzip compression insufficient for WASM binary size | Low | Low | Rapier WASM is ~2MB compressed. Acceptable for initial load. Can defer load until user enters first simulation |
@@ -611,7 +612,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 
 - **Status**: Accepted
 - **Context**: Phase 1 validates the core loop and engine architecture. It needs zero friction (no signup, instant access). User progress is non-critical (loss is acceptable during validation).
-- **Decision**: Phase 1 is entirely client-side. No backend API, no database server, no user accounts. All state in IndexedDB.
+- **Decision**: Phase 1 is entirely client-side. No backend API, no database server, no user accounts. All state in SQLite WASM + OPFS (see ADR-11).
 - **Alternatives Considered**:
   - **Backend from day 1**: Build Rust API + Neon from the start. → Rejected because it doubles development time for features (auth, API, deployment) that provide zero Phase 1 value. The 1-person team should spend 100% of Phase 1 on the 3D experience.
   - **BaaS (Supabase/Firebase)**: Quick backend with auth, database, and real-time. → Rejected because it introduces external dependency and lock-in for a phase that doesn't need persistence. Also adds latency to what should be an instant, offline-capable experience.
@@ -671,6 +672,17 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
   - **Procedural-only (no asset files)**: Generate all geometry in code. → Rejected for environments and complex objects. Procedural generation is used for simulation objects (balls, ramps, wave surfaces) but lab environments, skyboxes, and visual polish require authored assets.
 - **Consequences**: (+) Industry standard for web 3D, excellent compression (Draco + KTX2), first-class Three.js/Drei support, broad tooling ecosystem (Blender, etc.). (−) KTX2 transcoding adds ~100ms to first texture load; Draco WASM decoder adds ~50KB to initial bundle.
 
+### ADR-11: SQLite WASM + OPFS for Client-Side Storage
+
+- **Status**: Accepted
+- **Context**: Phase 1 stores user progress, prediction history, per-tag accuracy, and adaptive engine state entirely client-side. This data is relational — the adaptive selector needs queries like "tag별 정확도 낮은 순 정렬, difficulty 범위 필터, 최근 완료 제외." Phase 3 will sync this data with Neon PostgreSQL.
+- **Decision**: SQLite WASM (`@sqlite.org/sqlite-wasm`) with OPFS (Origin Private File System) backend, wrapped by `sqlocal` for ergonomic async API. SQLite runs in a dedicated Web Worker using OPFS SyncAccessHandle for fast I/O.
+- **Alternatives Considered**:
+  - **IndexedDB via `idb`**: Browser-native, zero bundle cost, universal support. → Rejected because IndexedDB's key-value model makes adaptive engine queries complex and error-prone (cursor iteration, manual indexing). Phase 3 migration to PostgreSQL requires full data model translation. IndexedDB is retained only as fallback VFS if OPFS is unavailable.
+  - **IndexedDB + Dexie.js**: Adds query-like API over IndexedDB. → Rejected because even with Dexie's `.where().between()` chains, complex multi-condition queries remain awkward compared to SQL. Still requires data model translation for Phase 3.
+  - **PGlite (Postgres WASM)**: Actual PostgreSQL running in the browser. → Rejected because of significantly larger WASM binary (~5MB vs ~800KB for SQLite) and longer cold start. Schema compatibility with Neon would be perfect, but the bundle cost is prohibitive for a <3s load target.
+- **Consequences**: (+) SQL for adaptive engine queries, schema 1:1 with Phase 3 Neon PostgreSQL, OPFS gives fast synchronous-like I/O, `.db` file exportable for debugging, consistent Worker-based architecture alongside Rapier physics Worker. (−) +~800KB WASM binary; OPFS requires dedicated Worker (not main thread); OPFS browser support is modern-only (Chrome 86+, Firefox 111+, Safari 15.2+) — within Phase 1 target but needs IndexedDB VFS fallback for edge cases.
+
 ---
 
 ## 10. Phase Implementation Summary
@@ -687,7 +699,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 
 **Infrastructure**: Cloudflare Workers + R2. GitHub Actions CI/CD. PostHog analytics. Sentry error tracking.
 
-**Key ADRs**: ADR-1 (TanStack Start), ADR-2 (Three.js/R3F), ADR-3 (Rapier + Rust WASM), ADR-4 (Koota), ADR-5 (Client-only), ADR-6 (Cloudflare), ADR-7 (Challenge-as-Data), ADR-8 (Zustand + Koota), ADR-9 (TSL shaders), ADR-10 (glTF).
+**Key ADRs**: ADR-1 (TanStack Start), ADR-2 (Three.js/R3F), ADR-3 (Rapier + Rust WASM), ADR-4 (Koota), ADR-5 (Client-only), ADR-6 (Cloudflare), ADR-7 (Challenge-as-Data), ADR-8 (Zustand + Koota), ADR-9 (TSL shaders), ADR-10 (glTF), ADR-11 (SQLite WASM + OPFS).
 
 ### Phase 2 — Mechanics Expansion + AI [Phase 2]
 
