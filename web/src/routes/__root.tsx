@@ -6,6 +6,8 @@ import {
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
+import { Providers } from '~/app'
+import appCss from '~/app/styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,9 +20,10 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Phys Play',
+        title: 'PhysPlay',
       },
     ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   component: RootComponent,
 })
@@ -28,14 +31,16 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <Providers>
+        <Outlet />
+      </Providers>
     </RootDocument>
   )
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html>
+    <html lang="en">
       <head>
         <HeadContent />
       </head>
