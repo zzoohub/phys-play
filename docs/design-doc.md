@@ -47,7 +47,7 @@ Phase 1 ships the Mechanics Lab (3 stations, 26 challenges) as a client-only web
 
 **Phase evolution:**
 - **Phase 1:** Pure client-side SPA. No backend. SQLite WASM + OPFS for persistence.
-- **Phase 3+:** Backend API (accounts, teacher dashboard, progress sync). Server introduced only when validated need exists.
+- **Phase 3+:** Backend API (accounts, progress sync). Server introduced only when validated need exists.
 
 ### 1.3 Assumptions
 
@@ -96,7 +96,7 @@ Phase 1 has no backend — the entire application is a statically hosted SPA. Th
 2. **Operational cost is near-zero.** Static hosting (Vercel/Cloudflare Pages) scales to 10K+ UV/month with no infrastructure management.
 3. **Fastest path to validation.** Eliminating backend development cuts scope by ~40%, letting us validate the core loop sooner.
 
-**Trade-off:** No server means no cross-device sync, no teacher analytics, no abuse prevention. These are acceptable Phase 1 non-goals. Phase 3 introduces a backend when account/B2B features are needed.
+**Trade-off:** No server means no cross-device sync and no abuse prevention. These are acceptable Phase 1 non-goals. Phase 3 introduces a backend when account features are needed.
 
 **Frontend framework:** Next.js on Vercel.
 
@@ -399,7 +399,7 @@ Phase 1 has no authentication. No user identity exists — all data is anonymous
 
 **Phase 3 plan (noted for architecture awareness):**
 - Social login (Google OAuth2) + self-issued JWT
-- RBAC: student (default), teacher (dashboard access), admin
+- RBAC: user (default), admin
 - Local SQLite data migrated to server on first login with user consent
 - Backend enforces authorization — frontend is untrusted
 
@@ -609,7 +609,7 @@ Phase 2: Mouse/Touch → InputAdapter → God Hand actions
 ### ADR-1: Client-Only Architecture for Phase 1
 
 - **Status:** Accepted
-- **Context:** Phase 1 needs to validate the core learning loop with minimal infrastructure overhead. No server-side features (accounts, sync, teacher dashboard) are in scope. A backend would add 40% more development work with zero user-facing value.
+- **Context:** Phase 1 needs to validate the core learning loop with minimal infrastructure overhead. No server-side features (accounts, sync) are in scope. A backend would add 40% more development work with zero user-facing value.
 - **Decision:** Phase 1 is a pure client-side SPA with SQLite WASM (OPFS) for persistence, served as static files from a CDN.
 - **Alternatives Considered:**
   - *Thin API + database from day one:* Rejected — adds operational complexity (hosting, monitoring, security) for features that don't exist yet. Over-engineering for the problem at hand.
@@ -827,13 +827,11 @@ Phase 1 uses no AI/LLM. The adaptive engine is rule-based (ADR-8). This section 
 - `domains/auth/`: Google OAuth, JWT, RBAC
 - `domains/sync/`: SQLite ↔ server bidirectional sync
 - `domains/molecular-lab/`: New space with molecular engine
-- Teacher dashboard (separate frontend or embedded view)
-- UGC Stage 1: teacher challenge editor
+- UGC Stage 1: challenge editor
 
 **New infrastructure:**
 - GCP Cloud Run (backend)
 - Neon (database)
-- Resend (teacher notification emails)
 
 **New integrations:**
 - PDB / PubChem (molecular structure data)
