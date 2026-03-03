@@ -212,12 +212,16 @@ browser.main.app -> sentry: "Errors"
 |-----------|-----------|----------------|
 | TanStack Start App | TanStack Start + Vite + React 19 | SSR for landing page, client-side routing, page composition |
 | React Three Fiber | R3F + Drei + Three.js (WebGPU/WebGL) | 3D scene rendering, camera control, post-processing |
+| Shaders | TSL (Three.js Shading Language) | WebGPU-native shader authoring. TSL compiles to WGSL (WebGPU) or GLSL (WebGL fallback) from a single source, eliminating dual-shader maintenance. Used for: wave field visualization, force field overlays, prediction trajectory rendering, portal transition effects |
 | Koota ECS | Koota | Simulation entity state (position, velocity, forces), system execution order |
 | Zustand Stores | Zustand | UI state (theme, language, modal), domain state (challenge progress, adaptive engine) |
-| Rapier WASM + Solvers | @dimforge/rapier3d + custom JS | Rigid body physics (Rapier) and field simulations (wave solver) in Web Worker |
+| Rapier WASM + Solvers | @dimforge/rapier3d + custom Rust WASM | Rigid body physics (Rapier) and compute-heavy simulations (custom Rust WASM) in Web Worker |
+| Rust WASM Compute | Custom crates → wasm-pack | CPU-bound computation offload: wave equation solver, large-scale particle systems, prediction trajectory calculation. Compiled from `crates/` to `wasm-out/`. Loaded in Web Worker alongside Rapier |
+| XR Layer | @react-three/xr | [Phase 2+] WebXR session management, hand tracking input mapping. Same R3F scene graph — input adapters swap from mouse/touch to hand tracking |
+| 3D Assets | glTF 2.0 (Draco-compressed) + KTX2 textures | Standard 3D asset format. Draco for geometry compression, KTX2 for GPU-compressed textures. Loaded via Drei's `useGLTF` |
 | IndexedDB | idb (wrapper) | User progress, prediction history, adaptive engine state |
 | Cloudflare Workers | Vinxi/Nitro on Workers | Edge SSR, static asset serving, i18n routing |
-| Cloudflare R2 | S3-compatible object storage | Large static assets (skybox textures, audio, glTF) |
+| Cloudflare R2 | S3-compatible object storage | Large static assets (skybox textures, audio, glTF models) |
 
 ### 3.3 Component Overview
 
@@ -243,9 +247,10 @@ src/
 │
 ├── engine/           # Pure logic — never imports React
 │   ├── ecs/          # Koota world, components, systems, queries, prefabs
-│   ├── physics/      # Rapier adapter, custom solvers
+│   ├── physics/      # Rapier adapter, custom Rust WASM solvers
 │   ├── simulation/   # Pluggable simulation engines (see below)
 │   ├── challenge/    # Challenge loader, validator, adaptive selector
+│   ├── shaders/      # TSL shader modules (wave fields, force overlays, trajectories)
 │   └── ports/        # Interfaces for storage, analytics, physics backends
 │
 ├── domains/          # Composes experience + engine per domain
@@ -492,7 +497,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 - **CSP headers**: Strict Content-Security-Policy. `script-src 'self'`; `worker-src 'self'`; block inline scripts. WebGPU/WebGL require `'unsafe-eval'` for shader compilation — scope it to the canvas context.
 - **No user data collection**: Phase 1 collects only anonymous analytics (PostHog). No PII stored locally or transmitted.
 - **Dependency security**: `bun audit` in CI. Pin major versions for Three.js and Rapier (WASM binaries should be hash-verified).
-- **WASM integrity**: Rapier WASM binary loaded from same origin with SRI hash.
+- **WASM integrity**: Rapier and custom Rust WASM binaries loaded from same origin with SRI hash. Custom crates built via wasm-pack in CI with reproducible builds.
 - **Phase 3+ additions**: OWASP Top 10 review for API endpoints, JWT validation, CORS, rate limiting, input sanitization.
 
 ### 6.5 Performance & Scalability
@@ -583,12 +588,13 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 
 - **Status**: Accepted
 - **Context**: Phase 1 engines need: rigid body dynamics (projectile, collision), and field simulation (wave equation). No single physics library covers both.
-- **Decision**: Rapier WASM (`@dimforge/rapier3d`) for rigid body physics. Custom solvers (initially JS, Rust WASM if needed) for wave/field simulations.
+- **Decision**: Rapier WASM (`@dimforge/rapier3d`) for rigid body physics. Custom Rust WASM solvers (compiled from `crates/` via wasm-pack) for compute-heavy field simulations (wave equation, particle systems). Both run in a dedicated Web Worker.
 - **Alternatives Considered**:
   - **cannon-es**: Pure JS physics, no WASM. → Rejected because Rapier is 2-3x faster for rigid body simulation and provides deterministic simulation (important for reproducible challenge results).
-  - **Ammo.js (Bullet WASM)**: Battle-tested, used in AAA games. → Rejected because of larger binary size (~2.5MB), less ergonomic API, and Rapier's Rust origin aligns with potential custom WASM extensions.
+  - **Ammo.js (Bullet WASM)**: Battle-tested, used in AAA games. → Rejected because of larger binary size (~2.5MB), less ergonomic API, and Rapier's Rust origin aligns with custom WASM extensions sharing the same Rust toolchain.
+  - **JS-only custom solvers**: Simpler build pipeline, no Rust dependency. → Rejected because wave equation grid computation at 60fps on mid-range hardware is CPU-bound; Rust WASM provides 3-10x speedup over equivalent JS for tight numerical loops. The Rust toolchain is already present for Rapier's ecosystem.
   - **Rapier for everything**: Use Rapier's force fields for wave simulation. → Rejected because wave equation simulation requires grid-based computation, not particle-based rigid body physics. Wrong tool for the job.
-- **Consequences**: (+) Best rigid body performance in browser, deterministic simulation, small binary (~800KB compressed). (−) Two physics systems to maintain; wave solver needs custom development.
+- **Consequences**: (+) Best rigid body performance in browser, deterministic simulation, shared Rust toolchain for Rapier and custom solvers. (−) Rust build step adds CI complexity (`crates/` → `wasm-out/`); two physics paradigms (rigid body + grid-based) to maintain.
 
 ### ADR-4: Koota for ECS
 
@@ -643,6 +649,28 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
   - **Jotai / Valtio for UI**: Fine-grained reactivity. → Rejected because Zustand is simpler, has no proxy magic, and is sufficient for PhysPlay's UI complexity.
 - **Consequences**: (+) Each state model used where it excels. Clear boundary. (−) Two mental models for state; bridge code needed where UI needs to read simulation state (e.g., displaying current velocity in HUD).
 
+### ADR-9: TSL (Three.js Shading Language) for Shaders
+
+- **Status**: Accepted
+- **Context**: PhysPlay needs custom shaders for wave field visualization, force field overlays, prediction trajectory rendering, and portal transition effects. These must work on both WebGPU and WebGL renderers.
+- **Decision**: TSL (Three.js Shading Language) for all custom shaders. TSL is Three.js's node-based shader system that compiles to WGSL (WebGPU) or GLSL (WebGL) from a single source.
+- **Alternatives Considered**:
+  - **Raw WGSL + GLSL dual maintenance**: Write shaders twice, one per backend. → Rejected because maintaining two shader implementations per effect is error-prone and doubles shader development effort. Any visual difference between backends becomes a hard-to-debug divergence.
+  - **GLSL-only (WebGL fallback for all)**: Skip WebGPU shaders entirely. → Rejected because WebGPU's compute shaders are needed for wave field computation on GPU, and GLSL limits us to WebGL's capabilities even when WebGPU is available.
+  - **wgpu-matrix / custom shader abstraction**: Build a custom abstraction layer. → Rejected because TSL is the official Three.js solution, actively maintained, and integrated with Three.js's material system. Building our own would duplicate effort.
+- **Consequences**: (+) Single shader source for both backends, integrated with Three.js material pipeline, access to WebGPU compute shaders when available. (−) TSL is newer and less documented than raw GLSL; complex effects may hit TSL limitations.
+
+### ADR-10: glTF 2.0 as 3D Asset Format
+
+- **Status**: Accepted
+- **Context**: PhysPlay needs 3D assets for simulation environments (skyboxes, lab equipment, interactive objects). Assets must load fast, compress well, and integrate with the Three.js/R3F pipeline.
+- **Decision**: glTF 2.0 as the exclusive 3D asset format. Draco compression for geometry, KTX2 (Basis Universal) for GPU-compressed textures. Loaded via Drei's `useGLTF` with automatic caching.
+- **Alternatives Considered**:
+  - **FBX**: Common in game industry. → Rejected because FBX is a proprietary Autodesk format, has larger file sizes, and Three.js's FBX loader is less maintained than the glTF loader.
+  - **USD (Universal Scene Description)**: Pixar's format, gaining traction. → Rejected because browser support is nascent, Three.js USD support is experimental, and the tooling ecosystem is not mature for web delivery.
+  - **Procedural-only (no asset files)**: Generate all geometry in code. → Rejected for environments and complex objects. Procedural generation is used for simulation objects (balls, ramps, wave surfaces) but lab environments, skyboxes, and visual polish require authored assets.
+- **Consequences**: (+) Industry standard for web 3D, excellent compression (Draco + KTX2), first-class Three.js/Drei support, broad tooling ecosystem (Blender, etc.). (−) KTX2 transcoding adds ~100ms to first texture load; Draco WASM decoder adds ~50KB to initial bundle.
+
 ---
 
 ## 10. Phase Implementation Summary
@@ -659,7 +687,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 
 **Infrastructure**: Cloudflare Workers + R2. GitHub Actions CI/CD. PostHog analytics. Sentry error tracking.
 
-**Key ADRs**: ADR-1 (TanStack Start), ADR-2 (Three.js/R3F), ADR-3 (Rapier), ADR-4 (Koota), ADR-5 (Client-only), ADR-6 (Cloudflare), ADR-7 (Challenge-as-Data), ADR-8 (Zustand + Koota).
+**Key ADRs**: ADR-1 (TanStack Start), ADR-2 (Three.js/R3F), ADR-3 (Rapier + Rust WASM), ADR-4 (Koota), ADR-5 (Client-only), ADR-6 (Cloudflare), ADR-7 (Challenge-as-Data), ADR-8 (Zustand + Koota), ADR-9 (TSL shaders), ADR-10 (glTF).
 
 ### Phase 2 — Mechanics Expansion + AI [Phase 2]
 
