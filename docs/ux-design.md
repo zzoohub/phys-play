@@ -1,1855 +1,1674 @@
-# PhysPlay -- UX Design
+# PhysPlay -- UX Design v2
 
 **Status:** Draft
-**Author:** --
 **Last Updated:** 2026-03-04
-**Related:** [Product Brief](./product-brief.md) | [PRD](./prd.md) | [Phase 1 PRD](./prd-phase-1.md) | [Client Structure](./client-structure.md)
+**PRD Reference:** [prd.md](./prd.md) | [prd-phase-1.md](./prd-phase-1.md) | [design-doc.md](./design-doc.md)
 
 ---
 
 ## Table of Contents
 
-1. [Context and User Goal](#1-context-and-user-goal)
+1. [Context](#1-context)
 2. [Design Principles](#2-design-principles)
-3. [Visual Design Language](#3-visual-design-language)
-4. [Information Architecture](#4-information-architecture)
-5. [Screen Inventory](#5-screen-inventory)
-6. [User Flows](#6-user-flows)
-7. [Screen-by-Screen UX Specs](#7-screen-by-screen-ux-specs)
-8. [HUD System Design](#8-hud-system-design)
-9. [God Hand Interaction Design](#9-god-hand-interaction-design)
-10. [3D Lab Visual Design](#10-3d-lab-visual-design)
-11. [Prediction Type UX](#11-prediction-type-ux)
-12. [Discover Phase UX](#12-discover-phase-ux)
-13. [Onboarding UX](#13-onboarding-ux)
-14. [Responsive Design](#14-responsive-design)
-15. [Accessibility](#15-accessibility)
-16. [I18n](#16-i18n)
-17. [Phase Implementation Summary](#17-phase-implementation-summary)
+3. [Information Architecture](#3-information-architecture)
+4. [Screen Inventory](#4-screen-inventory)
+5. [User Flows](#5-user-flows)
+6. [Core Loop UX](#6-core-loop-ux)
+7. [HUD Design](#7-hud-design)
+8. [Navigation Model](#8-navigation-model)
+9. [Onboarding UX](#9-onboarding-ux)
+10. [Responsive Strategy](#10-responsive-strategy)
+11. [Accessibility](#11-accessibility)
+12. [Motion & Transitions](#12-motion--transitions)
+13. [State & Error Handling](#13-state--error-handling)
+14. [i18n UX](#14-i18n-ux)
+15. [Dark / Light Theme](#15-dark--light-theme)
+16. [Phase Implementation Summary](#16-phase-implementation-summary)
 
 ---
 
-## 1. Context and User Goal
+## 1. Context
 
-### JTBD Statement
+### 1.1 User Goal (JTBD)
 
-> When I encounter a science concept I don't understand, I want to predict, experiment, and see the result myself, so I can build real intuition instead of memorizing formulas.
+> When I encounter a science concept I don't understand, I want to predict what will happen, see for myself, and discover why -- so I can build real intuition instead of memorizing formulas.
 
-### User Context
+This is the single goal every UX decision serves. Every screen, interaction, and transition is measured against: "Does this get the user into the Predict-Play-Discover loop faster, keep them in it longer, and make the discovery moment more impactful?"
 
-- **Devices:** PC desktop/laptop (primary), mobile phone/tablet (secondary), XR headset (future)
-- **Environment:** Study room, classroom, commute (mobile), casual exploration
-- **Mental state:** Ranges from curious-playful (10-year-old) to focused-learning (29-year-old adult). Common thread: wants to *do*, not *read*
-- **Time pressure:** Varies. Micro-session (5 min, one challenge) to deep session (30+ min, station completion)
+### 1.2 User Contexts
 
-### Proto-Personas
+| Persona | Age | Device Context | Mental State | Friction Tolerance |
+|---------|-----|---------------|-------------|-------------------|
+| Seoyeon | 10 | PC at home, possibly tablet | Playful, bored by school, wants immediate fun | Very low -- will leave in 10 seconds if bored |
+| Minjun | 16 | PC or mobile, study breaks | Frustrated by formulas, curious but impatient | Low -- needs to see the point quickly |
+| Jiyoung | 29 | PC at desk, focused work session | Motivated but barrier-sensitive, self-directed | Medium -- will tolerate setup if value is clear |
 
-```
-Name:         Seoyeon (10, 4th grader)
-Goal:         Make science feel like a game
-Context:      After school on a laptop, distracted easily
-Frustrations: Too much text, boring diagrams
-Tech comfort: Medium (plays Roblox, uses YouTube)
-```
+### 1.3 Proto-Personas
 
 ```
-Name:         Minjun (16, 10th grader)
-Goal:         Understand physics intuitively, not just formulas
-Context:      Evening study session on a desktop, focused
-Frustrations: PhET has no goals, textbooks are formula-first
-Tech comfort: High
+Name:           Seoyeon
+Role:           Elementary student (4th grade)
+Goal:           Have fun while accidentally learning science
+Context:        After school, home PC, 15-30 min sessions
+Frustrations:   Text-heavy content, boring explanations, things that feel like homework
+Tech comfort:   Medium (games yes, productivity tools no)
+
+Name:           Minjun
+Role:           High school student (1st year)
+Goal:           Build physics intuition without drowning in math
+Context:        Study breaks, home PC, 20-40 min sessions
+Frustrations:   Formulas without meaning, aimless exploration, no clear progress
+Tech comfort:   High
+
+Name:           Jiyoung
+Role:           Developer, career changer
+Goal:           Grasp quantum basics through hands-on experimentation
+Context:        Evening PC sessions, focused, 30-60 min
+Frustrations:   Content that doesn't adapt to her level, math barriers
+Tech comfort:   Very High
 ```
 
-```
-Name:         Jiyoung (29, developer)
-Goal:         Build quantum mechanics intuition for career pivot
-Context:      Weekend exploration on laptop, self-motivated
-Frustrations: Online courses have too high a math barrier
-Tech comfort: Very High
-```
+### 1.4 Platform Constraints
+
+- **Primary:** PC desktop/laptop (mouse + keyboard)
+- **Secondary:** Mobile (touch)
+- **Future:** XR headsets (Phase 2+)
+- **Browser:** Chrome, Safari, Firefox (latest 2 versions)
+- **Rendering:** WebGPU with WebGL fallback
+- **Storage:** Local only (SQLite WASM + OPFS), no accounts in Phase 1
 
 ---
 
 ## 2. Design Principles
 
-Five principles derived from PhysPlay's core vision. Every design decision must serve at least one.
+Five principles govern all design decisions. They are ordered by priority -- when principles conflict, higher-numbered principles yield to lower-numbered ones.
 
-### P1. Prediction First, Never Passive
+### P1. Immediate Action, Zero Gatekeeping
 
-The product exists because "thinking before touching" is the mechanism for learning. Every interaction must begin with the user committing a prediction. If the prediction step feels like a chore, the product fails.
+> The user should be doing something interesting within 10 seconds of arrival.
 
-*Derived from: Core Insight ("생각하지 않고 만지기 때문"), Goal Gradient (commitment increases completion), Cognitive Load (prediction is germane load -- the useful kind).*
+No sign-up, no tutorial, no track selection. The first thing that happens is a challenge. This principle exists because our youngest persona (Seoyeon, 10) has a ~10-second patience window, and our core product bet is that the Predict-Play-Discover loop itself is the best onboarding.
 
-### P2. The Wrong Answer Is the Product
+**Cognitive basis:** Doherty Threshold (productivity soars when response time < 400ms) and Peak-End Rule (the first moment disproportionately shapes perception). If the first 30 seconds are friction, the product is dead.
 
-Being wrong is not a failure state -- it is the moment of maximum learning value. The UX must make "wrong" feel safe, interesting, and motivating rather than punishing. The Discover phase exists to turn every wrong prediction into a discovery.
+### P2. One Question at a Time
 
-*Derived from: Peak-End Rule (the discovery moment must be the "peak"), Aesthetic-Usability Effect (visual polish on the comparison moment forgives frustration).*
+> Never ask the user to do two things simultaneously.
 
-### P3. Game Stage, Not Educational Tool
+Each screen, each HUD state, each moment in the core loop has exactly one thing the user needs to focus on. During Predict: only the prediction input. During Play: only the experiment. During Discover: only the comparison. This is the fundamental guard against the cognitive overload that kills educational tools.
 
-The 3D labs must feel like entering a new level in a game, not opening an educational app. Distinct visual identities per lab, dramatic transitions, ambient soundscapes, and reward ceremonies are features, not decoration.
+**Cognitive basis:** Cognitive Load Theory (working memory holds 4 +/- 1 chunks). Hick's Law (decision time increases with options).
 
-*Derived from: REQ-041 (Semi-Stylized 3D Sandbox tone), Aesthetic-Usability Effect, Jakob's Law (game conventions, not LMS conventions).*
+### P3. The 3D is the Interface
 
-### P4. Get Out of the Way
+> In the lab, the 3D viewport IS the product. 2D overlays are servants of the 3D experience, never the reverse.
 
-During the Play phase, the user is a scientist with God Hand powers. UI must recede. HUD elements are minimal, translucent, and peripheral. The 3D simulation owns the screen. Every overlay element must pass the removal test: "Does this block the experiment?"
+HUD elements must be minimal, translucent, and deferential to the simulation. The user is here for the experiment, not the UI. If a HUD element could be replaced by a direct 3D interaction, prefer the 3D interaction.
 
-*Derived from: Cognitive Load (reduce extraneous load), First Principles (minimum needed to achieve goal), Fitts's Law (don't place UI where it competes with 3D interaction targets).*
+**Cognitive basis:** Von Restorff Effect -- the 3D simulation must be the visually dominant element. If HUD competes with the simulation, neither wins.
 
-### P5. 30-Second First Loop
+### P4. Wrong is Wonderful
 
-A first-time user must complete one full Predict-Play-Discover cycle within 30 seconds of opening the URL. No signup, no tutorial, no track selection. The first challenge is the onboarding.
+> Being wrong must feel safe, interesting, and productive -- never punishing.
 
-*Derived from: REQ-036, Doherty Threshold (perceived latency kills engagement), Goal Gradient (completing something fast creates momentum).*
+This is the core product insight: cognitive conflict (my prediction was wrong) drives conceptual change. The UX must protect this moment. No red error screens. No "wrong" labels. The discover phase frames every outcome as a discovery. The tone is "look at that difference" not "you got it wrong."
 
----
+**Cognitive basis:** Aesthetic-Usability Effect (emotional safety increases willingness to engage). Zeigarnik Effect (the unresolved gap between prediction and reality creates motivation to understand).
 
-## 3. Visual Design Language
+### P5. Show the Map, Hide the Path
 
-### 3.1 Two-Layer Design System
+> The user should always see where they are and what exists, but never feel forced down a predetermined sequence.
 
-PhysPlay has two distinct visual layers that must feel like they belong to the same product while serving different purposes.
+The hub shows all spaces and stations, with locked ones visible as silhouettes. Within a station, the adaptive engine chooses the next challenge -- but the user can always leave, switch stations, or return to the hub. No locked sequences, no "you must complete X before Y."
 
-#### Layer 1: 2D Pages -- Soft-Tech Educational (REQ-039)
-
-**Personality:** Trustworthy, inviting, clean. A modern science museum lobby -- bright, well-organized, welcoming to all ages.
-
-| Token | Light Theme | Dark Theme |
-|-------|------------|------------|
-| `background-primary` | `#FAFBFD` (almost white, subtle cool) | `#0F1117` (deep navy-black) |
-| `background-secondary` | `#F0F3F8` (light blue-gray) | `#1A1D27` (dark slate) |
-| `surface-card` | `#FFFFFF` | `#22252F` |
-| `surface-elevated` | `#FFFFFF` + shadow | `#2A2D3A` + subtle glow |
-| `text-primary` | `#1A1D27` | `#E8EBF0` |
-| `text-secondary` | `#6B7280` | `#9CA3AF` |
-| `accent-primary` | `#4F6BF6` (electric indigo) | `#6B82FF` (lighter indigo) |
-| `accent-secondary` | `#22C997` (mint green -- discovery/correct) | `#34DBA8` |
-| `accent-warning` | `#F59E0B` (amber) | `#FBBF24` |
-| `accent-error` | `#EF4444` | `#F87171` |
-| `border-default` | `#E5E7EB` | `#2D3040` |
-
-**Shape Language:**
-- Border radius: `12px` for cards, `8px` for buttons, `20px` for badges/pills
-- Shadows: soft, diffused (no hard drop shadows)
-- Spacing: generous -- layout-lg (48px) between major sections, layout-md (32px) between cards
-
-**Typography:**
-- System font stack: `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-- Korean: `"Pretendard Variable", "Noto Sans KR", sans-serif`
-- Scale: follows 1.250 modular scale (Major Third)
-
-| Style | Size | Weight | Use |
-|-------|------|--------|-----|
-| Display | 36px / 2.25rem | 700 | Landing hero only |
-| H1 | 28px / 1.75rem | 700 | Page titles |
-| H2 | 22px / 1.375rem | 600 | Section headers |
-| H3 | 18px / 1.125rem | 600 | Card titles |
-| Body | 16px / 1rem | 400 | Paragraph text |
-| Body-small | 14px / 0.875rem | 400 | Secondary info |
-| Caption | 12px / 0.75rem | 500 | Labels, badges |
-
-**Iconography:** Outlined, 1.5px stroke, rounded joins. Simple, geometric. 24px default grid.
-
-#### Layer 2: 3D Labs -- Semi-Stylized 3D Game Style (REQ-041)
-
-**Personality:** Each lab is a game stage. Not photorealistic, not cartoon -- a stylized middle ground that feels tactile, inviting, and playful. Think *Monument Valley* meets *Kerbal Space Program* meets a well-designed science toy.
-
-**Shared 3D conventions:**
-- Materials: soft PBR with subtle toon shading edge. Not flat-shaded, not hyper-realistic
-- Geometry: slightly rounded edges on all objects (chamfered/beveled). No perfectly sharp edges
-- Scale: tabletop perspective. Objects are small enough to feel like toys the user controls
-- Lighting: strong key light + soft fill + rim light. Always readable, never dark or obscure
-- Particles: used for feedback (launch trails, collision sparks, wave ripples) and atmosphere (dust motes, energy particles)
-- Post-processing: subtle bloom on emissive elements, light depth-of-field on background, no heavy filters
-
-Each lab's unique visual design is detailed in [Section 10: 3D Lab Visual Design](#10-3d-lab-visual-design).
-
-#### Layer Bridge: Portal Transition (REQ-040)
-
-The 2D-to-3D transition is not a page navigation -- it is a *threshold crossing*. It signals: "You are leaving the lobby and entering the lab."
-
-**Transition sequence (1.2-1.5 seconds total):**
-
-1. **Trigger:** User taps a lab card on the Hub screen
-2. **Zoom-in (0-400ms):** The lab card expands to fill the viewport. Background dims. Card content fades out, replaced by a swirling portal effect in the lab's signature color
-3. **Portal pass (400-800ms):** A tunnel/warp effect in the lab's color palette rushes toward the camera. Ambient sound crossfades from Hub music to lab ambient
-4. **3D reveal (800-1200ms):** The portal dissolves to reveal the 3D lab environment. Camera settles at the default position with a gentle ease-out
-5. **HUD fade-in (1200-1500ms):** HUD elements appear with staggered fade-in (100ms apart)
-
-**Reduced motion alternative:** Card expands, cross-fades directly to 3D scene (no tunnel effect). 500ms total.
-
-**Reverse transition (lab exit):** Lab fades to portal, collapses back to card position on Hub. 800ms.
-
-### 3.2 Color System
-
-#### Semantic Colors (Shared Across Layers)
-
-| Semantic | Purpose | Value (Light) | Value (Dark) |
-|----------|---------|---------------|--------------|
-| `correct` | Prediction was right | `#22C997` (mint) | `#34DBA8` |
-| `incorrect` | Prediction was wrong | `#F97316` (warm orange, NOT red) | `#FB923C` |
-| `prediction-line` | User's drawn prediction | `#4F6BF6` (indigo) | `#6B82FF` |
-| `result-line` | Actual simulation result | `#22C997` (mint) | `#34DBA8` |
-| `interactive` | Clickable/tappable 3D objects | Outlined glow in lab accent color | Same |
-| `destructive` | Reset, clear prediction | `#EF4444` (red) | `#F87171` |
-
-**Key decision:** `incorrect` uses warm orange, not red. Red implies danger/failure. Orange implies "interesting -- let's find out why." This supports P2 (The Wrong Answer Is the Product).
-
-*Principle: Peak-End Rule -- the moment of seeing an incorrect prediction must not feel punishing. Color contributes to emotional framing.*
-
-#### Lab-Specific Accent Palettes
-
-| Lab | Primary Accent | Secondary Accent | Glow/Particle |
-|-----|---------------|-----------------|---------------|
-| Mechanics Lab (역학 실험실) | `#4F9CF5` (sky blue) | `#F5A623` (warm amber) | Light blue trails |
-| Molecular Lab (분자 실험실) | `#7C3AED` (violet) | `#06B6D4` (cyan) | Electron orbital glow |
-| Space Observatory (우주 관측소) | `#1E3A5F` (deep space blue) | `#F59E0B` (star gold) | Stardust particles |
-| Quantum Lab (양자 연구소) | `#EC4899` (magenta-pink) | `#06B6D4` (quantum cyan) | Probability cloud shimmer |
-
-### 3.3 Motion Principles
-
-| Context | Duration | Easing | Notes |
-|---------|----------|--------|-------|
-| Micro-interaction (button press, toggle) | 100-150ms | ease-out | Immediate feedback |
-| HUD element appear/dismiss | 200-300ms | ease-out (appear), ease-in (dismiss) | Staggered by 60ms per element |
-| Phase transition (Predict to Play) | 400-600ms | ease-in-out | Camera repositions, HUD swaps |
-| Portal transition (2D to 3D) | 1200-1500ms | custom bezier | See Portal Transition above |
-| Simulation playback (e.g., ball flight) | Physics-driven | N/A | Real-time physics, no easing -- must feel authentic |
-| Prediction overlay comparison | 600-800ms | ease-out | Prediction line draws in, then result line draws in |
-
-**Reduced motion (`prefers-reduced-motion: reduce`):**
-- All transitions become instant cross-fades (150ms max)
-- Portal transition becomes simple fade (500ms)
-- Auto-rotation and particle effects disabled
-- Simulation playback unaffected (it is the content, not decoration)
-
-### 3.4 Sound Design Principles
-
-| Layer | Category | Behavior |
-|-------|----------|----------|
-| 2D pages | UI sounds | Subtle clicks and soft tones on navigation. Optional -- can be muted globally |
-| Portal transition | Transition SFX | Whoosh + ambient crossfade. Spatial audio if available |
-| 3D lab ambient | Background atmosphere | Continuous loop, unique per lab. Volume adjustable. Fades in/out on lab enter/exit |
-| 3D lab BGM | Background music | Unique per lab. Low volume. Adjustable. Can be disabled independently |
-| God Hand SFX | Interaction feedback | Spatially positioned at the object. Throw whoosh, collision impact, wave pulse |
-| Prediction feedback | Correct/Incorrect | Correct: bright chime + particle burst. Incorrect: neutral tone (NOT failure buzzer) + subtle visual cue |
-
-**User controls:** Master volume, SFX volume, BGM volume, Ambient volume. Accessible from HUD settings gear.
+**Cognitive basis:** Goal Gradient Effect (visible destination increases motivation). Serial Position Effect (clear beginning and end points anchor the experience).
 
 ---
 
-## 4. Information Architecture
+## 3. Information Architecture
 
-### 4.1 Site Map
+### 3.1 Sitemap
 
 ```
-[PhysPlay Root]
+[PhysPlay]
 |
-+-- Landing Page [Phase 1]
-|   (first-time: auto-redirect to onboarding challenge)
-|   (returning: auto-redirect to Research Hub)
++-- / (Landing) [Phase 1]                          -- First visit entry point
 |
-+-- Research Hub (연구소 허브) [Phase 1]
-|   |-- Space Map (공간 맵)
-|   |   |-- Mechanics Lab (역학 실험실) [Phase 1]
-|   |   |-- Molecular Lab (분자 실험실) [Phase 3] [locked]
-|   |   |-- Space Observatory (우주 관측소) [Phase 4] [locked]
-|   |   +-- Quantum Lab (양자 연구소) [Phase 5] [locked]
++-- /hub (Research Lab Hub) [Phase 1]               -- Home for returning users
 |   |
-|   |-- Progress Overview (진도 개요) [Phase 1]
-|   +-- Settings (설정) [Phase 1]
-|
-+-- 3D Lab Experience (실험실 경험) [Phase 1]
-|   |-- [Portal Transition]
-|   |-- Station Select (HUD) [Phase 1]
-|   |   |-- Station A
-|   |   |-- Station B
-|   |   +-- Station C
+|   +-- Space selection (4 spaces, Phase 1 = Mechanics Lab only)
+|   |   +-- [Mechanics Lab] [Phase 1]
+|   |   +-- [Molecular Lab] [Phase 3] (locked silhouette)
+|   |   +-- [Space Observatory] [Phase 4] (locked silhouette)
+|   |   +-- [Quantum Lab] [Phase 5] (locked silhouette)
 |   |
-|   |-- Challenge Loop (HUD) [Phase 1]
-|   |   |-- Predict Phase
-|   |   |-- Play Phase
-|   |   +-- Discover Phase
-|   |
-|   |-- Variable Controls (HUD) [Phase 1]
-|   |-- Lab Settings (HUD) [Phase 1]
-|   +-- Exit to Hub
+|   +-- Station selection (within space)
+|       +-- Projectile Station [Phase 1]
+|       +-- Energy Station [Phase 1]
+|       +-- Wave Station [Phase 1]
 |
-+-- Settings [Phase 1]
-|   |-- Language (en/ko)
-|   |-- Theme (Light/Dark/System)
-|   |-- Sound (Master, SFX, BGM, Ambient)
-|   |-- Graphics Quality (Auto/Low/Medium/High)
-|   +-- Motion (Full/Reduced)
++-- /progress (Learning Progress) [Phase 1]         -- Progress tracking dashboard
 |
-+-- Account [Phase 3]
-|   |-- Profile
-|   |-- Progress Sync
-|   +-- Data Export/Delete
++-- /settings (Settings) [Phase 1]                  -- User preferences
 |
-+-- Challenge Editor [Phase 3+]
-+-- Station Editor [Phase 4+]
-+-- Space Editor [Phase 5+]
++-- [3D Lab Experience] (full-screen, no URL change) [Phase 1]
+    |
+    +-- [Predict Phase]  -- Prediction input overlay
+    +-- [Play Phase]     -- God Hand simulation
+    +-- [Discover Phase] -- Comparison overlay + explanation
+    +-- [HUD]            -- Station nav, controls, progress
 ```
 
-### 4.2 Navigation Pattern
+### 3.2 Navigation Pattern
 
 | Context | Pattern | Justification |
 |---------|---------|---------------|
-| 2D pages (Hub, Settings) | Top navigation bar (web) | Simple, few top-level destinations. Follows web conventions (Jakob's Law) |
-| 3D lab (inside) | HUD overlay -- no traditional nav | 3D viewport must dominate. Traditional nav would compete with the experience (P4: Get Out of the Way) |
-| Station switching (inside lab) | HUD tab rail (left edge) | Persistent access without leaving 3D. Minimal footprint. Inspired by game sidebar menus |
-| Phase switching (Predict/Play/Discover) | Automatic progression with HUD phase indicator | Not user-navigated -- follows the core loop sequence. User sees where they are but doesn't "navigate" phases |
+| 2D pages (Hub, Progress, Settings) | Top nav bar (web standard) | Jakob's Law -- web users expect top navigation. 3-4 top-level items fits Miller's Law. |
+| Within 3D Lab | HUD overlays (no page navigation) | REQ-015 mandates full-screen 3D. Page navigation would destroy immersion. |
+| 2D to 3D transition | Portal transition animation | REQ-040 -- dramatic shift signals context change from browsing to experimentation. |
+| Station switching (within 3D) | HUD station selector | User stays in 3D -- no need to exit to hub for intra-space navigation. |
+| 3D to 2D exit | Exit button in HUD -> transition back to hub | Always available, one-click escape from any lab state. |
 
-### 4.3 Depth Validation
+### 3.3 Depth Validation
 
-| User Goal | Taps/Clicks from Hub | Passes <= 3 Rule? |
-|-----------|---------------------|--------------------|
-| Start a challenge | Hub -> Lab card (1) -> Station (2) -> Challenge starts auto (2) | Yes (2) |
-| Resume progress | Hub -> Lab card (1) -> "Continue" (auto-selected station) (2) | Yes (2) |
-| Change language | Hub -> Settings icon (1) -> Language toggle (2) | Yes (2) |
-| Switch stations inside lab | HUD station tab (1) | Yes (1) |
-| Adjust variable mid-experiment | HUD variable panel toggle (1) -> Slider (2) | Yes (2) |
+Core content (starting a challenge) is reachable in at most 3 actions:
 
-*Principle: IA Principle of Disclosure -- core content reachable in 2 taps. Settings and secondary content in 2-3.*
+- **First visit:** URL -> instant challenge (0 actions, P1: Immediate Action)
+- **Returning user:** Hub (1) -> select space (2) -> select station (3) -> challenge starts
+- **Within 3D lab:** Station selector (1) -> challenge starts (2)
 
----
+This meets the IA reference's rule: core content reachable in 3 or fewer taps/clicks.
 
-## 5. Screen Inventory
+### 3.4 Entry Points
 
-### 2D Screens
-
-| # | Screen | Route | Phase | Description |
-|---|--------|-------|-------|-------------|
-| S01 | Landing Page | `/` | 1 | Product entry point. First-time: immediate redirect to onboarding. Returning: redirect to Hub |
-| S02 | Research Hub | `/hub` | 1 | Home screen. Space map with lab cards, progress overview, quick-resume |
-| S03 | Settings | `/settings` | 1 | Language, theme, sound, graphics, motion preferences |
-| S04 | Progress Detail | `/progress` | 1 | Detailed per-station progress, accuracy charts, concept mastery |
-| S05 | Account | `/account` | 3 | Profile, sync, data management |
-| S06 | Challenge Editor | `/editor/challenge` | 3+ | UGC challenge creation |
-| S07 | Station Editor | `/editor/station` | 4+ | UGC station sequencing |
-| S08 | Space Editor | `/editor/space` | 5+ | UGC space creation |
-
-### 3D Screens (HUD States)
-
-| # | HUD State | Phase | Description |
-|---|-----------|-------|-------------|
-| H01 | Lab Entry | 1 | Post-portal arrival. Station selector visible. Welcome-back context |
-| H02 | Predict Phase | 1 | Prediction input active. Challenge question visible. Timer optional |
-| H03 | Play Phase | 1 | God Hand active. Minimal HUD. Variable display if relevant |
-| H04 | Discover Phase | 1 | Comparison overlay. Concept explanation panel. Next challenge CTA |
-| H05 | Station Complete | 1 | Celebration sequence. New station unlock hint. Progress summary |
-| H06 | Lab Settings | 1 | Sound, graphics quality. Accessible without leaving 3D |
-| H07 | Variable Panel | 1 | Adjustable parameters for current challenge (gravity, mass, etc.) |
-| H08 | Cross-Engine Suggestion | 3+ | Discover phase: link to related concept in another lab |
-| H09 | Pause/Exit Overlay | 1 | Pause simulation. Options: resume, restart, exit to Hub |
+| Entry Point | Destination | Context |
+|-------------|-------------|---------|
+| Direct URL (first visit) | Landing -> immediate first challenge | SEO, social share, marketing |
+| Direct URL (returning) | Hub (if local progress exists) | Bookmark, direct navigation |
+| /hub | Research Lab Hub | Home for returning users |
+| /progress | Progress dashboard | Self-assessment |
+| /settings | Settings | Preferences |
+| Shared challenge URL [Phase 3+] | Specific challenge in 3D lab | Social sharing, UGC |
 
 ---
 
-## 6. User Flows
+## 4. Screen Inventory
 
-### 6.1 First Visit Onboarding
+### 4.1 Landing Page [Phase 1]
 
-```mermaid
-flowchart TD
-    A[User opens URL] --> B{First visit?}
-    B -->|Yes| C[Landing: brief tagline + auto-start in 2s]
-    B -->|No| D[Redirect to Research Hub]
-    C --> E[Portal Transition to Mechanics Lab]
-    E --> F[Onboarding Challenge: Ball Throw]
-    F --> G[PREDICT: Draw trajectory]
-    G --> H{User draws?}
-    H -->|Yes| I[Submit prediction]
-    H -->|Hesitates 5s| J[Tooltip: 'Draw where you think the ball will land']
-    J --> H
-    H -->|Skips| K[Gentle nudge: 'Give it a try! No wrong answers here.']
-    K --> L{User draws?}
-    L -->|Yes| I
-    L -->|Skips again| M[Allow skip, proceed]
-    I --> N[PLAY: God Hand - drag to throw ball]
-    M --> N
-    N --> O[Ball flies, physics plays out]
-    O --> P[DISCOVER: Prediction vs Result comparison]
-    P --> Q{Correct?}
-    Q -->|Yes| R[Celebration + 'Nice intuition! Try a harder one?']
-    Q -->|No| S[Warm encouragement + 'Here is why...' Level 1 explanation]
-    R --> T[Next challenge auto-queued]
-    S --> T
-    T --> U[After 1st challenge: Hub reveal]
-    U --> V[Research Hub with space map]
-```
+**Route:** `/` (index.tsx)
+**Purpose:** Entry point for first-time visitors. Immediately routes to the first challenge experience.
+**Primary Action:** Start the first challenge (happens automatically or with a single tap).
 
-**Target time:** Landing to Discover = 30 seconds. Landing to Hub reveal = 60 seconds.
+The landing page has two modes based on user state:
 
-### 6.2 Returning User: Hub to Lab
+**Mode A: First Visit (no local data)**
 
-```mermaid
-flowchart TD
-    A[User opens URL] --> B[Research Hub]
-    B --> C[User sees: lab cards with progress indicators]
-    C --> D[User taps Mechanics Lab card]
-    D --> E[Portal Transition 1.2-1.5s]
-    E --> F[3D Lab loads + HUD appears]
-    F --> G{Previous session?}
-    G -->|Yes| H[Auto-select last active station, show 'Continue' prompt]
-    G -->|No| I[Station selector: choose Projectile / Energy / Wave]
-    H --> J[User taps 'Continue' or selects different station]
-    I --> J
-    J --> K[Challenge loads: Predict phase begins]
-```
-
-### 6.3 Core Loop: Predict -- Play -- Discover
-
-```mermaid
-flowchart TD
-    A[Challenge loaded] --> B[PREDICT PHASE]
-    B --> C[Challenge question displayed]
-    C --> D[Prediction input active]
-    D --> E{Prediction type}
-    E -->|Trajectory| F[User draws path on 3D surface]
-    E -->|Binary| G[User selects A or B]
-    E -->|Pattern| H[User picks from 3-4 options]
-    E -->|Placement| I[User places marker in 3D space]
-    F --> J[Submit prediction]
-    G --> J
-    H --> J
-    I --> J
-    J --> K[Transition to PLAY PHASE - 400ms]
-    K --> L[God Hand activated]
-    L --> M[User performs action - throw/build/push/etc.]
-    M --> N[Simulation runs - physics engine calculates]
-    N --> O[Simulation complete]
-    O --> P[Transition to DISCOVER PHASE - 600ms]
-    P --> Q[Prediction overlay appears on simulation result]
-    Q --> R{Correct?}
-    R -->|Yes| S[Green comparison + celebration particle + chime]
-    R -->|No| T[Orange comparison + neutral tone + 'Let us explore why']
-    S --> U[Concept reinforcement - Level appropriate]
-    T --> V[Concept explanation - Level appropriate]
-    U --> W[Next challenge CTA]
-    V --> W
-    W --> X{User action}
-    X -->|Next challenge| Y[Adaptive engine selects next challenge]
-    X -->|Adjust variables| Z[Variable panel opens, user tweaks, replays]
-    X -->|Switch station| AA[Station selector]
-    X -->|Exit lab| AB[Portal transition back to Hub]
-    Y --> A
-    Z --> B
-```
-
-### 6.4 Station Switching Within Lab
-
-```mermaid
-flowchart TD
-    A[User is in Projectile Station] --> B[User taps Wave tab on HUD station rail]
-    B --> C{Mid-challenge?}
-    C -->|Yes| D[Auto-save progress, show brief confirmation toast]
-    C -->|No| E[Direct transition]
-    D --> E
-    E --> F[Camera pans to Wave station area - 600ms]
-    F --> G[Wave station loads - HUD updates]
-    G --> H[Previous progress shown if any]
-    H --> I[Next challenge for Wave station begins]
-```
-
-### 6.5 Cross-Engine Discovery [Phase 3+]
-
-```mermaid
-flowchart TD
-    A[User completes Doppler challenge in Wave Station] --> B[DISCOVER phase shows red-shift concept]
-    B --> C[Cross-reference card appears: 'This concept appears in the cosmos too']
-    C --> D{User taps cross-reference?}
-    D -->|Yes| E{Target lab unlocked?}
-    E -->|Yes| F[Portal transition to Space Observatory + specific challenge]
-    E -->|No| G[Show unlock hint: 'Complete 3 more mechanics challenges to unlock']
-    D -->|No| H[Continue to next challenge in current station]
-    G --> H
-```
-
----
-
-## 7. Screen-by-Screen UX Specs
-
-### S01: Landing Page [Phase 1]
-
-**Route:** `/`
-**Primary action:** Enter the experience (for first-time users, this is automatic)
-
-**Layout:**
+This is NOT a marketing page. Per P1 (Immediate Action), the landing page for first-time visitors functions as a launch pad into the first challenge. The page shows a brief value statement and an immediate call to action.
 
 ```
 +-------------------------------------------------------+
-|  [PhysPlay logo]                    [en/ko] [Settings] |
-+---------------------------------------------------------+
-|                                                         |
-|   "Predict. Experiment. Discover."                      |
-|   (과학을 예측하고, 실험하고, 발견하세요)                    |
-|                                                         |
-|   [Start Experimenting]  <-- Primary CTA                |
-|                                                         |
-|   (First-time users: auto-starts in 2 seconds           |
-|    with a gentle countdown indicator)                   |
-|                                                         |
-+---------------------------------------------------------+
+|  [Logo] PhysPlay            [en/ko]                   |
++-------------------------------------------------------+
+|                                                       |
+|              [Illustration: 3D ball trajectory]        |
+|                                                       |
+|        Can you predict where the ball lands?          |
+|                                                       |
+|              [ Start Experimenting ]                  |
+|                                                       |
+|  "Predict, experiment, discover science"              |
+|                                                       |
++-------------------------------------------------------+
 ```
+
+- Headline: A question, not a feature list. Piques curiosity. (UX Writing: action-oriented, no jargon)
+- Single CTA button: "Start Experimenting" -- specific verb, describes what happens next
+- No feature tours, no hero sections, no marketing copy (Anti-pattern: promotional language inside product flows)
+- i18n: en/ko toggle in top-right
+
+**Mode B: Returning Visitor (local progress exists)**
+
+Redirect to `/hub` automatically. The landing page is no longer relevant once the user has progress data.
 
 **States:**
-- **First visit:** Auto-redirects to onboarding challenge after 2 seconds. "Start Experimenting" button available immediately for impatient users. Countdown indicator shows remaining time
-- **Returning visit:** Immediately redirects to Research Hub (no landing page shown)
-- **Loading:** Skeleton shimmer on the CTA area. 3D assets preloading in background
-- **Error (3D not supported):** "Your browser doesn't support 3D experiences. Try Chrome, Firefox, or Safari on a recent device." + link to supported browser list
-- **Offline:** "You're offline. PhysPlay needs an internet connection to load for the first time. Once loaded, experiments work offline."
 
-**Copy:**
-- Heading: "Predict. Experiment. Discover." / "예측하고, 실험하고, 발견하세요"
-- CTA: "Start Experimenting" / "실험 시작하기"
-- Subtext: "No signup needed. Jump right in." / "가입 필요 없음. 바로 시작하세요."
+| State | Behavior |
+|-------|----------|
+| Empty (first visit) | Show Mode A |
+| Loaded (returning visit) | Redirect to /hub |
+| Loading (checking local storage) | Brief skeleton (< 300ms expected) |
+| Error (storage check fails) | Fall through to Mode A (safe default) |
+| Offline | Mode A still works -- no network needed |
 
-**Design rationale:** The landing page's only job is to get the user into the first challenge as fast as possible (P5: 30-Second First Loop). No feature tour, no testimonials, no pricing. First-time users bypass it entirely after 2 seconds. Returning users never see it.
+### 4.2 Research Lab Hub [Phase 1]
 
-*Principle: Removal Test -- everything that isn't "start the experience" was removed. Doherty Threshold -- 2-second auto-start prevents idle drop-off.*
-
-### S02: Research Hub (연구소 허브) [Phase 1]
-
-**Route:** `/hub`
-**Primary action:** Enter a lab
-
-**Layout:**
+**Route:** `/hub` (hub.tsx)
+**Purpose:** Home screen for returning users. Central navigation to all spaces and stations.
+**Primary Action:** Select a space/station to enter the 3D lab.
 
 ```
-+---------------------------------------------------------------+
-|  [PhysPlay logo]     Research Hub       [Progress] [Settings]  |
-+---------------------------------------------------------------+
-|                                                                |
-|  Welcome back, Researcher.           Session: 12 challenges    |
-|  Continue where you left off?        Accuracy: 68%             |
-|                                                                |
-|  +------------------+  +------------------+                    |
-|  |  MECHANICS LAB   |  |  MOLECULAR LAB   |                   |
-|  |  역학 실험실       |  |  분자 실험실       |                   |
-|  |                  |  |                  |                    |
-|  | [lab thumbnail]  |  | [locked icon]    |                   |
-|  |                  |  | Phase 3          |                   |
-|  | Progress: 40%    |  | [silhouette]     |                   |
-|  | 3 stations       |  |                  |                   |
-|  |                  |  |                  |                   |
-|  | [Enter Lab]      |  | [Locked]         |                   |
-|  +------------------+  +------------------+                    |
-|                                                                |
-|  +------------------+  +------------------+                    |
-|  | SPACE            |  |  QUANTUM LAB     |                   |
-|  | OBSERVATORY      |  |  양자 연구소       |                   |
-|  | 우주 관측소        |  |                  |                   |
-|  |                  |  | [locked icon]    |                   |
-|  | [locked icon]    |  | Phase 5          |                   |
-|  | Phase 4          |  | [silhouette]     |                   |
-|  | [silhouette]     |  |                  |                   |
-|  |                  |  |                  |                   |
-|  | [Locked]         |  | [Locked]         |                   |
-|  +------------------+  +------------------+                    |
-|                                                                |
-+---------------------------------------------------------------+
++-------------------------------------------------------+
+|  [Logo] PhysPlay     [Hub] [Progress] [Settings]      |
++-------------------------------------------------------+
+|                                                       |
+|  My Research Lab                                      |
+|                                                       |
+|  +-------------------+  +-------------------+         |
+|  |                   |  |                   |         |
+|  |  MECHANICS LAB    |  |  MOLECULAR LAB    |         |
+|  |  [Unlocked]       |  |  [Locked]         |         |
+|  |                   |  |  (silhouette)     |         |
+|  |  3/3 Stations     |  |                   |         |
+|  |  12/26 Challenges  |  |  Coming soon      |         |
+|  +-------------------+  +-------------------+         |
+|                                                       |
+|  +-------------------+  +-------------------+         |
+|  |  SPACE            |  |  QUANTUM LAB      |         |
+|  |  OBSERVATORY      |  |  [Locked]         |         |
+|  |  [Locked]         |  |  (silhouette)     |         |
+|  +-------------------+  +-------------------+         |
+|                                                       |
+|  ---- Mechanics Lab Stations ---                      |
+|                                                       |
+|  [ Projectile ]  [ Energy ]  [ Wave ]                 |
+|     8/10            3/8         1/8                    |
+|    "Continue"     "Continue"  "Start"                  |
+|                                                       |
++-------------------------------------------------------+
 ```
 
-**Lab cards:** Each card shows:
-- Lab name (en + ko)
-- Thumbnail: stylized 3D preview of the lab environment (rendered as a static image, not live 3D)
-- Progress indicator: percentage bar + station count
-- Status: "Enter Lab" (unlocked) or "Locked" with silhouette and unlock hint
-- Locked labs show a subtle shimmer animation hinting at what is inside
+**Key Design Decisions:**
+
+- **Space cards** show both unlocked (full art) and locked (monochrome silhouette + label) spaces. Locked spaces are visible to create curiosity (P5: Show the Map) but not interactive beyond showing unlock conditions. Principle: Goal Gradient Effect.
+- **Station chips** appear below the selected space. Each shows completion count and a contextual CTA ("Continue" if in progress, "Start" if new). Principle: Zeigarnik Effect -- incomplete stations are visually prominent.
+- **Progress summary** on each space card: "{completed}/{total} Challenges" provides goal gradient visibility.
+- **No search needed**: With 4 spaces and 3-5 stations per space, browsing covers all content (IA reference: favor browse for < 100 items).
 
 **States:**
-- **Empty (first visit, post-onboarding):** Only Mechanics Lab unlocked. Others show as mysterious silhouettes with "???" labels that reveal the name on hover. Copy: "Complete challenges in the Mechanics Lab to unlock new spaces."
-- **Loading:** Card skeletons matching layout. Progress data loads from IndexedDB
-- **Loaded:** Full cards with progress data
-- **Error (IndexedDB read fail):** "We couldn't load your progress. Your data might still be saved locally. Try refreshing." + retry button
-- **Partial (some data loads):** Show loaded cards, inline error on failed cards
-- **Offline:** Show cached progress data. Labs still accessible for offline play. Banner: "You're offline. Your progress will be saved locally."
 
-**Interactions:**
-- Hover on lab card: subtle elevation increase (4px lift), shadow deepens. Card thumbnail animates subtly (parallax tilt)
-- Click on unlocked lab card: initiates Portal Transition
-- Click on locked lab card: shows bottom sheet with unlock requirements and preview content
-- Click on Progress: navigates to Progress Detail page
-- Click on Settings gear: navigates to Settings page
-
-**Copy:**
-- Welcome line (returning): "Welcome back, Researcher." / "연구원님, 돌아오셨네요."
-- Resume prompt: "Continue where you left off?" / "이어서 실험할까요?"
-- Locked lab hint: "Complete [N] more challenges to unlock" / "[N]개 더 도전하면 해금됩니다"
-
-*Principle: Zeigarnik Effect -- showing progress percentage and locked labs with silhouettes creates motivation to continue. Von Restorff Effect -- the unlocked lab card is visually distinct from locked ones.*
-
-### S03: Settings [Phase 1]
-
-**Route:** `/settings`
-**Primary action:** Adjust preferences
-
-**Layout:**
-
-```
-+---------------------------------------------------------------+
-|  [<- Back to Hub]          Settings                            |
-+---------------------------------------------------------------+
-|                                                                |
-|  Language / 언어                                                |
-|  [EN] [KO]  <-- segmented control                             |
-|                                                                |
-|  Theme / 테마                                                   |
-|  [Light] [Dark] [System]  <-- segmented control                |
-|                                                                |
-|  Sound / 사운드                                                  |
-|  Master     [----------o------] 80%                            |
-|  SFX        [----------o------] 80%                            |
-|  BGM        [------o----------] 50%                            |
-|  Ambient    [--------o--------] 60%                            |
-|                                                                |
-|  Graphics / 그래픽                                               |
-|  [Auto] [Low] [Medium] [High]  <-- segmented control           |
-|                                                                |
-|  Motion / 모션                                                   |
-|  [Full] [Reduced]  <-- segmented control                       |
-|                                                                |
-|  Data / 데이터                                                   |
-|  [Clear Local Progress]  <-- destructive, requires confirmation |
-|                                                                |
-+---------------------------------------------------------------+
-```
-
-**States:**
-- **Loaded:** All preferences loaded from localStorage/IndexedDB
-- **Error:** "Settings couldn't be saved. Try again." + retry
-- **Offline:** All settings work offline (local storage)
-
-**Interactions:**
-- All changes apply immediately (no "Save" button needed -- settings are non-destructive)
-- "Clear Local Progress" requires confirmation dialog: "Delete all your progress? This removes all challenge history, accuracy data, and unlocks. This cannot be undone." Buttons: [Cancel] [Delete Progress]
-
-*Principle: Jakob's Law -- standard settings patterns. Removal Test -- no "Save" button because all changes are instant and reversible (except data deletion).*
-
-### S04: Progress Detail [Phase 1]
-
-**Route:** `/progress`
-**Primary action:** Understand learning progress
-
-**Layout:**
-
-```
-+---------------------------------------------------------------+
-|  [<- Back to Hub]        My Progress                           |
-+---------------------------------------------------------------+
-|                                                                |
-|  Overall: 42 challenges completed | 68% accuracy              |
-|                                                                |
-|  +-- Mechanics Lab --+                                         |
-|  |                   |                                         |
-|  |  Projectile Station                                         |
-|  |  [==========-------] 70%  |  Accuracy: 72%                 |
-|  |  10/14 challenges                                           |
-|  |                                                             |
-|  |  Energy Station                                             |
-|  |  [======-----------] 45%  |  Accuracy: 65%                 |
-|  |  5/11 challenges                                            |
-|  |                                                             |
-|  |  Wave Station                                               |
-|  |  [===--------------] 20%  |  Accuracy: 60%                 |
-|  |  2/10 challenges                                            |
-|  |                                                             |
-|  +-------------------+                                         |
-|                                                                |
-|  Concept Mastery                                               |
-|  +-- Gravity: Strong (85%)                                     |
-|  +-- Momentum: Growing (62%)                                   |
-|  +-- Wave Interference: New (30%)                              |
-|                                                                |
-+---------------------------------------------------------------+
-```
-
-**States:**
-- **Empty (no challenges completed):** "No progress yet. Start your first experiment!" + CTA: "Go to Mechanics Lab"
-- **Loaded:** Per-station progress bars, accuracy percentages, concept mastery list
-- **Offline:** Shows cached progress data
-
-*Principle: Goal Gradient -- showing completion percentages motivates continued engagement. Zeigarnik Effect -- incomplete stations are prominently displayed.*
-
----
-
-## 8. HUD System Design
-
-The HUD (Heads-Up Display) is the UI layer that floats on top of the 3D viewport inside labs. It must be minimal, translucent, and never obstruct the simulation.
-
-### 8.1 HUD Layout Principles
-
-```
-+---------------------------------------------------------------+
-|  [Phase Indicator]          [Station Name]     [Settings] [X]  |  <- Top bar (always visible)
-|                                                                |
-|  +---+                                                         |
-|  |P  |                                                         |  <- Station rail (left edge)
-|  |---|                                                         |     P = Projectile
-|  |E  |               3D VIEWPORT                               |     E = Energy
-|  |---|               (simulation)                              |     W = Wave
-|  |W  |                                                         |
-|  +---+                                                         |
-|                                                                |
-|                                                                |
-|                                                                |
-|  [Context-specific bottom panel -- changes per phase]          |  <- Bottom panel (phase-specific)
-+---------------------------------------------------------------+
-```
-
-**HUD element rules:**
-- **Opacity:** Default 85% opacity. Fades to 40% during Play phase when user is interacting with 3D. Returns to 85% on pause or when cursor leaves 3D viewport
-- **Background:** Frosted glass effect (backdrop-blur) matching the lab's ambient color
-- **Position:** Top bar and station rail are persistent. Bottom panel changes per phase
-- **Hit areas:** All HUD buttons are 44x44px minimum
-- **Z-order:** HUD always renders on top of 3D content. Uses HTML overlay on top of WebGL canvas (not rendered in 3D space)
-
-### 8.2 Top Bar
-
-Persistent across all phases. Minimal information.
-
-| Element | Content | Position |
-|---------|---------|----------|
-| Phase indicator | "Predict" / "Play" / "Discover" with step dots (1 of 3) | Left |
-| Station name | Current station + challenge number (e.g., "Projectile #7") | Center |
-| Settings gear | Opens Lab Settings overlay | Right |
-| Exit button | "X" -- returns to Hub via reverse portal | Far right |
-
-**Phase indicator animation:** Active phase name fades in, step dots fill left-to-right as user progresses. Smooth color transition between phases.
-
-### 8.3 Station Rail (Left Edge)
-
-Vertical tab rail. Always visible inside a lab. Each tab is an icon + abbreviated label.
-
-```
-+------+
-| [/]  |  Projectile  (active: filled icon + accent underline)
-|------|
-| [O]  |  Energy      (inactive: outlined icon)
-|------|
-| [~]  |  Wave        (locked: dimmed icon + lock badge)
-+------+
-```
-
-**Behavior:**
-- Tap to switch stations. Transition: camera pans to new station area (600ms)
-- Active station: filled icon, accent-colored left border
-- Locked station: dimmed, lock icon overlay, tap shows unlock requirement tooltip
-- Hover (desktop): tooltip with full station name + progress
-
-### 8.4 Predict Phase HUD
-
-```
-+---------------------------------------------------------------+
-|  PREDICT  [o--]                 Projectile #7    [gear] [X]    |
-|                                                                |
-|  +---+                                                         |
-|  |P* |                                                         |
-|  |---|                                                         |
-|  |E  |               3D VIEWPORT                               |
-|  |---|               (static scene setup)                      |
-|  |W  |                                                         |
-|  +---+                                                         |
-|                                                                |
-|  +-------------------------------------------------------------+
-|  | "Where will the ball land?"                                  |
-|  | 이 공은 어디에 떨어질까요?                                       |
-|  |                                                              |
-|  | [Draw your prediction on the surface]                        |
-|  |                                            [Skip] [Submit]   |
-|  +-------------------------------------------------------------+
-```
-
-**Bottom panel contents by prediction type:**
-
-| Prediction Type | Panel Content |
-|-----------------|---------------|
-| Trajectory | Instruction: "Draw the path" + visual hint (faint dotted guide showing draw area). Submit becomes active after user draws |
-| Binary | Two large option cards side by side. Tap to select, tap again to deselect. Submit becomes active on selection |
-| Pattern | 3-4 option thumbnails (small 3D previews or diagrams). Tap to select. Submit becomes active on selection |
-| Placement | Instruction: "Place the marker where you think [X] will be" + draggable 3D marker. Submit becomes active after placement |
-
-**Key interactions:**
-- "Skip" is always available but visually secondary (text link, not button)
-- First-time skip: shows gentle nudge ("Predictions make the experiment more fun. Give it a try?" / "예측하면 실험이 더 재밌어요. 한번 해볼까요?") with [Try] and [Skip Anyway]
-- "Submit" is primary button, disabled until prediction input is provided
-- After submit: brief confirmation animation (prediction locks in, line/selection pulses once), then transition to Play phase
-
-*Principle: Goal Gradient -- prediction is step 1 of 3, visually shown. Cognitive Load -- only the question and input method are shown, nothing else. Hick's Law -- binary/pattern choices limited to 2-4 options.*
-
-### 8.5 Play Phase HUD
-
-```
-+---------------------------------------------------------------+
-|  PLAY  [-o-]                    Projectile #7    [gear] [X]    |
-|                                                                |
-|  +---+                                                         |
-|  |P* |                                                         |
-|  |---|                                                         |
-|  |E  |               3D VIEWPORT                               |
-|  |---|               (interactive simulation)                  |
-|  |W  |                                                         |
-|  +---+                                                         |
-|                                                                |
-|                               [Variable display: g=9.8 m/s^2]  |
-|                                                                |
-|  +-------------------------------------------------------------+
-|  | Drag the ball to throw it                                    |
-|  | 공을 드래그해서 던지세요                                         |
-|  +-------------------------------------------------------------+
-```
-
-**HUD minimization during Play:**
-- Bottom panel shows only a single-line instruction, then fades to 40% opacity after 3 seconds
-- Variable display (bottom-right corner) shows current simulation parameters at 60% opacity
-- Top bar fades to 40% opacity
-- Station rail remains at 60% opacity
-- Full HUD opacity returns when: cursor moves to HUD area, user presses Escape, or simulation completes
-
-**Key interactions:**
-- God Hand interactions take priority over all HUD interactions
-- If user clicks/taps on HUD element, HUD captures the event (no 3D passthrough)
-- If user clicks/taps on 3D viewport area, God Hand captures the event
-- Simulation plays in real-time. No fast-forward on first play. Replay available after first completion
-
-*Principle: P4 (Get Out of the Way) -- HUD recedes to let the simulation dominate. Doherty Threshold -- God Hand response must be <100ms.*
-
-### 8.6 Discover Phase HUD
-
-```
-+---------------------------------------------------------------+
-|  DISCOVER  [--o]                Projectile #7    [gear] [X]    |
-|                                                                |
-|  +---+                                                         |
-|  |P* |                                                         |
-|  |---|       3D VIEWPORT                                       |
-|  |E  |       (result with prediction overlay)                  |
-|  |---|                                                         |
-|  |W  |                                                         |
-|  +---+                                                         |
-|                                                                |
-|  +-------------------------------------------------------------+
-|  | [Correct icon] Nice intuition!                               |
-|  |                                                              |
-|  | Your prediction was close. The ball follows a parabolic      |
-|  | path because gravity pulls it down at a constant rate.       |
-|  |                                                              |
-|  | [Deeper Explanation v]      [Adjust Variables] [Next ->]     |
-|  +-------------------------------------------------------------+
-```
-
-**Bottom panel contents:**
-
-| Sub-element | Behavior |
-|-------------|----------|
-| Result badge | Green checkmark (correct) or orange "Let's explore" (incorrect). NOT a red X |
-| Headline | "Nice intuition!" / "잘 맞췄어요!" (correct) or "Interesting! Here's what happened" / "흥미로운 결과네요! 이유를 알아볼까요?" (incorrect) |
-| Explanation text | Level-appropriate concept explanation. Scrollable if long. 3 lines visible by default |
-| "Deeper Explanation" | Accordion/expandable. Opens Level 2 or Level 3 explanation below. Icon: chevron down |
-| "Adjust Variables" | Opens Variable Panel. Allows replay with different parameters |
-| "Next" | Primary CTA. Moves to next challenge via adaptive engine |
-
-**3D viewport behavior during Discover:**
-- Camera auto-positions to best comparison angle
-- User's prediction overlay shown (dashed line in `prediction-line` color)
-- Actual result shown (solid line in `result-line` color)
-- Overlay draws in sequence: prediction line first (300ms), then result line (300ms), then divergence points highlighted (200ms)
-- User can still orbit/zoom the 3D scene to inspect from different angles
-- Replay button available (small, bottom-left of viewport): replays simulation at 0.5x speed with prediction overlay visible
-
-*Principle: Peak-End Rule -- the Discover phase is the "end" of each loop. It must be satisfying whether correct or incorrect. Cognitive Load -- explanation starts at Level 1 (germane load), deeper levels available on demand (progressive disclosure).*
-
-### 8.7 Variable Panel (HUD Overlay)
-
-```
-+---------------------------------------------------------------+
-|                                                                |
-|  +---+                                                         |
-|  |P* |                                                         |
-|  |---|       3D VIEWPORT                 +------------------+  |
-|  |E  |                                   | Variables        |  |
-|  |---|                                   |                  |  |
-|  |W  |                                   | Gravity          |  |
-|  +---+                                   | [====o=====] 9.8 |  |
-|                                          | m/s^2            |  |
-|                                          |                  |  |
-|                                          | Mass             |  |
-|                                          | [==o========] 1kg|  |
-|                                          |                  |  |
-|                                          | Presets:         |  |
-|                                          | [Earth] [Moon]   |  |
-|                                          | [Jupiter]        |  |
-|                                          |                  |  |
-|                                          | [Reset] [Apply]  |  |
-|                                          +------------------+  |
-|                                                                |
-+---------------------------------------------------------------+
-```
-
-**Behavior:**
-- Slides in from right edge (300ms ease-out)
-- Semi-transparent background (frosted glass)
-- Sliders adjust simulation parameters in real-time preview (optimistic update on 3D scene)
-- Presets: quick buttons for common environments (Earth, Moon, Jupiter, Mars, etc.)
-- "Reset" returns to challenge defaults. "Apply" locks in values and restarts the prediction phase
-- Accessible via keyboard: Tab to each slider, arrow keys to adjust
-
-*Principle: Hick's Law -- presets reduce decisions for common cases. Progressive Disclosure -- advanced variables only shown when panel is opened.*
-
-### 8.8 Pause/Exit Overlay
-
-Triggered by pressing Escape or tapping the X button.
-
-```
-+---------------------------------------------------------------+
-|                                                                |
-|                     +-----------------------+                  |
-|                     |                       |                  |
-|                     |  Experiment paused    |                  |
-|                     |  실험이 일시정지됨       |                  |
-|                     |                       |                  |
-|                     |  [Resume Experiment]  |  <- Primary      |
-|                     |  [Restart Challenge]  |                  |
-|                     |  [Exit to Hub]        |                  |
-|                     |                       |                  |
-|                     +-----------------------+                  |
-|                                                                |
-+---------------------------------------------------------------+
-```
-
-**Behavior:**
-- 3D scene pauses (physics stops, render continues at reduced frame rate)
-- Background dims to 50% opacity
-- Modal centered in viewport
-- "Resume" is primary (filled button). "Restart" and "Exit" are secondary (outlined)
-- Keyboard: Escape also resumes (close modal). Enter activates focused button
-- "Exit to Hub" triggers reverse portal transition
-
-*Principle: Confirmation Dialog -- only shown for pause (which has context loss implications). "Exit" does not require extra confirmation because progress auto-saves.*
-
----
-
-## 9. God Hand Interaction Design
-
-### 9.1 Core Mental Model
-
-The user is a god-like experimenter with an invisible hand. They look down at a tabletop where science experiments happen at toy scale. They can reach in and manipulate objects directly -- no avatar, no cursor, just their hand (mouse/touch/XR hand).
-
-**Perspective:** First-person, slightly above eye-level, looking down at the experiment table at roughly 30-45 degrees.
-
-**Scale:** Objects are small enough to feel like toys (0.5m-2m tabletop), large enough to see clearly and interact with (minimum 44px screen projection for smallest interactive object).
-
-### 9.2 Interaction Pattern Catalog
-
-| Pattern | Description | Used In |
-|---------|-------------|---------|
-| **Throw/Launch** | Grab object, pull back (like slingshot), release to launch | Projectile, Collision |
-| **Assemble/Build** | Pick up components, place them together to construct | Collision/Energy (marble run), Molecular |
-| **Push/Pull** | Apply force to object in a direction | Collision, Wave |
-| **Place/Install** | Position object at specific location in 3D space | Wave (emitter placement), Orbital, Quantum |
-| **Remove** | Pick up and discard an object | Energy (remove track piece) |
-| **Shake Space** | Shake/vibrate the experiment space itself | Wave (create disturbance) |
-| **Rotate** | Rotate object around its axis | Molecular (rotate molecule) |
-| **Scale Switch** | Zoom into microscopic or out to cosmic scale | Molecular (atom to molecule), Orbital (planet to system) |
-| **Toggle** | Flip a switch or toggle a state | Quantum (observer ON/OFF) |
-| **Measure** | Place measurement tool, read value | Quantum (measure position/momentum) |
-| **Time Manipulation** | Speed up, slow down, or reverse time | Orbital (see long-period orbits) |
-
-### 9.3 PC Mouse + Keyboard Mappings
-
-| Action | Mouse | Keyboard | Visual Feedback |
-|--------|-------|----------|----------------|
-| **Orbit camera** | Right-click + drag | Arrow keys | Cursor: grab/grabbing. Smooth damping on release |
-| **Zoom** | Scroll wheel | +/- keys | Smooth zoom with limits (min/max distance) |
-| **Pan camera** | Middle-click + drag | Shift + Arrow keys | Smooth pan with boundaries |
-| **Select object** | Left-click on object | Tab to cycle, Enter to select | Object highlight glow (outline + subtle scale pulse) |
-| **Grab object** | Left-click + hold on object | -- | Object lifts slightly, shadow updates, cursor: grabbing |
-| **Throw/Launch** | Drag back + release (slingshot) | -- | Direction arrow appears during drag. Trail preview. Release = launch |
-| **Place object** | Drag to position + release | -- | Snap guides visible. Green highlight = valid position. Red = invalid |
-| **Rotate object** | R key + mouse move | R + Arrow keys | Rotation gizmo appears around object |
-| **Toggle** | Left-click on switch | Space (when switch focused) | Switch flips with animation + audio click |
-| **Draw (prediction)** | Left-click + drag on surface | -- | Smooth line follows cursor. Undo with Ctrl+Z |
-| **Reset view** | Double-click on empty space | Home key | Camera smoothly returns to default position (500ms) |
-| **Undo** | Ctrl/Cmd + Z | -- | Last action reversed with visual feedback |
-| **Pause** | -- | Escape | Pause overlay appears |
-
-**Cursor states:**
-
-| State | Cursor |
+| State | Design |
 |-------|--------|
-| Default (over 3D viewport) | `crosshair` |
-| Hovering interactive object | `pointer` + object glow |
-| Grabbing object | `grabbing` + object follows |
-| Dragging to throw | `grabbing` + direction arrow + power indicator |
-| Drawing prediction | `crosshair` + trail line |
-| Over HUD element | `pointer` (standard) |
-| Camera orbit | `grab` then `grabbing` |
+| Empty (first visit, just completed onboarding) | Space map with Mechanics Lab unlocked, welcome message: "Your research lab is ready. Pick a station to begin." |
+| Loaded | Full hub with progress data |
+| Loading | Skeleton matching card layout (shimmer) |
+| Error (storage read fails) | "We had trouble loading your progress. Your data might still be safe -- try refreshing." + [Refresh] button |
+| Partial (some data loaded) | Show what loaded, inline error for failed sections |
+| Offline | Works fully -- all data is local |
 
-### 9.4 Mobile Touch Gesture Mappings
+### 4.3 Progress Page [Phase 1]
 
-| Action | Touch Gesture | Visual Feedback |
-|--------|--------------|----------------|
-| **Orbit camera** | One-finger drag on empty space | Smooth damping rotation |
-| **Zoom** | Two-finger pinch | Smooth zoom with limits |
-| **Pan camera** | Two-finger drag | Smooth pan with boundaries |
-| **Select object** | Tap on object | Object highlight glow + subtle haptic |
-| **Grab object** | Long-press on object (300ms) | Object lifts, haptic pulse on grab |
-| **Throw/Launch** | Long-press + drag + release (slingshot) | Direction arrow, power indicator. Haptic on release |
-| **Place object** | Drag to position + lift finger | Snap guides. Haptic on snap |
-| **Rotate object** | Two-finger twist on selected object | Rotation gizmo |
-| **Toggle** | Tap on switch | Switch animation + haptic click |
-| **Draw (prediction)** | One-finger drag on designated draw surface | Smooth line. Undo button visible |
-| **Reset view** | Double-tap on empty space | Camera resets (500ms) |
+**Route:** `/progress` (progress.tsx)
+**Purpose:** Visualize learning progress across stations and concepts.
+**Primary Action:** Identify areas to improve and navigate to relevant stations.
 
-**Touch conflict resolution:**
-- Draw surface is designated (slightly different shade/outline). One-finger drag on draw surface = draw. One-finger drag elsewhere = orbit
-- If ambiguous, default to camera orbit. Drawing mode is explicitly entered via HUD "Draw" button
-- Bottom 15% of viewport reserved for HUD -- touch here never triggers 3D interaction
+```
++-------------------------------------------------------+
+|  [Logo] PhysPlay     [Hub] [Progress] [Settings]      |
++-------------------------------------------------------+
+|                                                       |
+|  My Progress                                          |
+|                                                       |
+|  Mechanics Lab                                        |
+|  +-------------------------------------------------+ |
+|  | Projectile   [========------]  8/10  80%        | |
+|  | Energy       [====---------]  3/8   38%         | |
+|  | Wave         [=------------]  1/8   13%         | |
+|  +-------------------------------------------------+ |
+|                                                       |
+|  Prediction Accuracy                                  |
+|  +-------------------------------------------------+ |
+|  | Overall: 62%                                     | |
+|  | Best: Projectile trajectory (85%)                | |
+|  | Needs work: Wave interference (30%)              | |
+|  |                     [ Practice Wave ] <- CTA     | |
+|  +-------------------------------------------------+ |
+|                                                       |
+|  Recent Activity                                      |
+|  +-------------------------------------------------+ |
+|  | Today: 5 challenges, 3 correct                   | |
+|  | This week: 12 challenges                         | |
+|  +-------------------------------------------------+ |
+|                                                       |
++-------------------------------------------------------+
+```
 
-*Principle: Gesture Design Rules -- never override system gestures. Always provide visible alternatives. Haptic feedback reinforces spatial interaction.*
+**Key Design Decisions:**
 
-### 9.5 XR Hand Tracking Mappings [Phase 2+]
+- **Station progress bars** provide at-a-glance completion status. Principle: Goal Gradient Effect.
+- **Prediction accuracy section** highlights strengths and weaknesses. The "needs work" area has a direct CTA to practice that topic -- actionable, not just informational. Principle: Zeigarnik Effect (incomplete areas motivate return).
+- **No leaderboards or social comparison** in Phase 1. Per P4 (Wrong is Wonderful), the progress page frames everything as personal growth, not competition.
 
-| Action | Hand Gesture | Feedback |
-|--------|-------------|----------|
-| **Select object** | Gaze at object + pinch (thumb + index) | Object highlight + spatial audio tick |
-| **Grab object** | Reach + close hand around object | Object follows hand. Haptic resistance at boundaries |
-| **Throw/Launch** | Grab + wind up + open hand to release | Trail follows hand path. Spatial whoosh on release |
-| **Place object** | Grab + position + open hand | Snap to surface + settle animation. Spatial "click" sound at object position |
-| **Rotate object** | Grab with both hands + twist | Object rotates with hands. Haptic resistance at snap angles |
-| **Draw (prediction)** | Index finger extended + draw in air or on surface | Glowing trail follows fingertip. Spatial drawing sound |
-| **Toggle** | Reach + flip switch with finger | Physical switch animation + haptic click + spatial sound |
-| **Scale switch** | Two-hand pinch outward (zoom) or inward (shrink) | World scales around hands. Spatial depth sound |
-| **Reset view** | Open palm toward scene + push away | Scene resets with whoosh |
+**States:**
 
-**XR God Hand design rules:**
-- Objects are at tabletop height (waist level when standing, desk level when seated)
-- All interactions reachable from seated position
-- No sustained arm-raised positions -- objects within comfortable reach
-- Voice commands available as fallback: "throw", "place", "undo", "next"
+| State | Design |
+|-------|--------|
+| Empty (no challenges completed) | "Start experimenting to see your progress here." + [Go to Hub] CTA |
+| Loaded | Full progress dashboard |
+| Offline | Works fully -- all data is local |
 
-*Principle: XR Comfort Zones -- interactive content at 0.5-1.2m (personal zone). Cybersickness Prevention -- user initiates all motion. Accessibility -- seated use, one-handed alternatives.*
+### 4.4 Settings Page [Phase 1]
 
-### 9.6 Throw/Launch Mechanic Detail
+**Route:** `/settings` (settings.tsx)
+**Purpose:** User preferences for language, theme, audio, and accessibility.
+**Primary Action:** Adjust a setting (changes apply immediately, no save button needed).
 
-The throw is PhysPlay's signature interaction. It must feel physical and satisfying.
+```
++-------------------------------------------------------+
+|  [Logo] PhysPlay     [Hub] [Progress] [Settings]      |
++-------------------------------------------------------+
+|                                                       |
+|  Settings                                             |
+|                                                       |
+|  Language                                             |
+|  [English v]  [Korean]                                |
+|                                                       |
+|  Theme                                                |
+|  [System v]  [Light]  [Dark]                          |
+|                                                       |
+|  Audio                                                |
+|  Sound Effects  [====|====] 80%                       |
+|  Music          [====|====] 60%                       |
+|                                                       |
+|  Discover Depth                                       |
+|  [ Intuitive (Level 1) ]                              |
+|  [ Conceptual (Level 2) ] <- default                  |
+|  [ With Formulas (Level 3) ]                          |
+|                                                       |
+|  Accessibility [Phase 2]                              |
+|  Reduce Motion  [ OFF ]                               |
+|  High Contrast  [ OFF ]                               |
+|                                                       |
+|  Data                                                 |
+|  [Export Progress]  [Clear All Data]                   |
+|                                                       |
++-------------------------------------------------------+
+```
+
+**Key Design Decisions:**
+
+- **Immediate apply**: All settings take effect instantly. No "Save" button needed. This follows the interaction pattern: optimistic UI for settings toggles (> 95% success rate, reversible).
+- **Discover depth preference**: Users can set their preferred explanation depth (Level 1/2/3). The adaptive engine uses this as a starting point but may adjust per challenge. This respects user agency while allowing the system to adapt.
+- **Clear All Data**: Destructive action. Requires confirmation dialog: "Clear all progress? This removes all your experiment history and progress. This cannot be undone." + [Cancel] [Clear Data]. Specific verb on the destructive button per UX Writing rules.
+- **Segmented controls** for Language and Theme instead of dropdowns (Fitts's Law -- larger targets, fewer steps).
+- **Audio sliders** with percentage labels -- accessible, clear current state.
+
+**States:**
+
+| State | Design |
+|-------|--------|
+| Loaded | All current settings shown with current values |
+| Error (setting fails to persist) | Inline error below the failed setting: "Could not save. Try again." |
+| Offline | Works fully -- settings are local |
+
+### 4.5 3D Lab Experience [Phase 1]
+
+**Trigger:** User selects a space/station from Hub, or enters via onboarding.
+**Purpose:** The core product experience -- full-screen 3D viewport with HUD overlays.
+**Primary Action:** Complete the core loop (Predict -> Play -> Discover).
+
+This is NOT a traditional screen -- it is a full-viewport 3D experience with HUD overlays. It has sub-states that correspond to the core loop phases, detailed in Section 6 (Core Loop UX) and Section 7 (HUD Design).
+
+**States:**
+
+| State | Design |
+|-------|--------|
+| Loading (entering lab) | Portal transition animation plays over a blurred preview of the 3D environment. Progress bar overlaid. "Entering Mechanics Lab..." |
+| Loaded (idle in lab) | Full 3D environment with HUD. Station selector visible. Ready for challenge. |
+| Predict phase | Prediction input HUD overlaid on 3D scene |
+| Play phase | God Hand active, minimal HUD, simulation running |
+| Discover phase | Comparison overlay on 3D scene + explanation panel |
+| Between challenges | Brief transition (0.5s) + next challenge setup |
+| Error (engine fails) | HUD error panel: "Something went wrong with the simulation. [Try Again] or [Back to Hub]" |
+| Offline | Works fully -- simulations run locally |
+
+---
+
+## 5. User Flows
+
+### 5.1 First Visit Flow
+
+```
+URL (/)
+  |
+  v
+[Landing Page - Mode A]
+  |
+  | "Start Experimenting" tap
+  v
+[Portal Transition: 2D -> 3D]
+  |
+  v
+[3D Lab: Onboarding Challenge]
+  |-- Contextual hint: "Where will the ball land? Draw your prediction."
+  v
+[PREDICT: Draw trajectory]
+  |-- Skip available (gentle nudge first)
+  v
+[PLAY: God Hand throw]
+  |-- Contextual hint (first time only): "Click and drag the ball to throw it"
+  v
+[DISCOVER: Overlay comparison]
+  |-- Level 1 explanation (intuitive analogy)
+  |-- "Next Challenge" CTA
+  v
+[Hub Reveal]
+  |-- Portal Transition: 3D -> 2D
+  |-- Hub page with space map
+  |-- Mechanics Lab unlocked
+  |-- Other spaces visible as silhouettes
+  v
+[Hub Page - user is home]
+```
+
+**Decision Points:**
+
+| Decision | Default | Alternative |
+|----------|---------|------------|
+| Skip prediction? | Gentle nudge: "Give it a try -- there is no wrong answer!" then allow skip | Skipped -> still see Play + Discover |
+| After first challenge: more challenges or hub? | Show Hub to establish the mental model of the research lab | "Keep Going" secondary option to stay in lab |
+
+**Critical timing:** From URL open to first interaction (drawing prediction) must be under 10 seconds. This means:
+- Landing page renders in < 2s (SSR)
+- Portal transition + 3D load in < 3s (poster image -> progressive loading)
+- First challenge ready immediately after load (pre-loaded as the default challenge)
+
+### 5.2 Returning User Flow
+
+```
+URL (/) or /hub
+  |
+  | (local progress detected -> redirect to /hub)
+  v
+[Hub Page]
+  |
+  | Select space card (e.g., Mechanics Lab)
+  v
+[Station chips appear]
+  |
+  | Select station (e.g., Energy)
+  v
+[Portal Transition: 2D -> 3D]
+  |
+  v
+[3D Lab: Continue from last challenge]
+  |
+  v
+[PREDICT -> PLAY -> DISCOVER loop]
+  |
+  |-- Adaptive engine selects next challenge
+  |-- Difficulty adjusts based on performance
+  |-- Cross-engine recommendations appear in Discover [Phase 3+]
+  |
+  | At any time: HUD station selector to switch stations
+  | At any time: Exit button to return to Hub
+  v
+[Station complete?]
+  |-- Yes: Celebration moment + "Try another station" or "Back to Hub"
+  |-- No: Next challenge continues
+```
+
+### 5.3 Station Navigation Flow (Within 3D Lab)
+
+```
+[Currently in Projectile Station, challenge in progress]
+  |
+  | Tap station selector in HUD
+  v
+[Station list appears as HUD overlay]
+  |-- Projectile (8/10) -- current
+  |-- Energy (3/8)
+  |-- Wave (1/8)
+  |
+  | Select "Energy"
+  v
+[Brief transition within 3D (0.5s camera move + env shift)]
+  |
+  v
+[Energy Station: Continue from last challenge]
+```
+
+No exit to 2D. No loading screen. Station switching within a space is a camera movement and environment parameter change within the same 3D scene.
+
+### 5.4 Settings Flow
+
+```
+[Any 2D page]
+  |
+  | Tap "Settings" in nav bar
+  v
+[Settings Page]
+  |
+  | Adjust settings (instant apply)
+  |
+  | Tap "Hub" or "Progress" in nav bar
+  v
+[Destination page with settings applied]
+```
+
+No save action. No "are you sure" dialogs for non-destructive settings. Only "Clear All Data" gets a confirmation (destructive + irreversible).
+
+### 5.5 Cross-Engine Discovery Flow [Phase 3+]
+
+```
+[Discover phase: Wave station - Doppler effect challenge]
+  |
+  | Explanation includes cross-reference:
+  | "This same effect makes distant galaxies appear red.
+  |  See it in action at the Space Observatory."
+  |
+  | [Explore in Space Observatory] CTA
+  v
+[Is Space Observatory unlocked?]
+  |-- Yes: Portal transition -> Space Observatory -> related challenge
+  |-- No: "Unlock the Space Observatory by completing Mechanics Lab."
+  |        Shows unlock progress. Returns to current station.
+```
+
+---
+
+## 6. Core Loop UX
+
+The core loop (Predict -> Play -> Discover) is the product. This section details the interaction design for each phase.
+
+### 6.1 Loop State Machine
+
+```
+[IDLE] -- challenge loaded --> [PREDICT]
+                                   |
+                          submit / skip
+                                   |
+                                   v
+                               [PLAY]
+                                   |
+                          simulation complete
+                                   |
+                                   v
+                             [DISCOVER]
+                                   |
+                          "Next Challenge" / "Change Station"
+                                   |
+                                   v
+                               [IDLE]
+```
+
+Each state transition is accompanied by a visual shift in the HUD (see Section 7). The 3D viewport remains full-screen throughout -- only the HUD overlay changes.
+
+### 6.2 Predict Phase
+
+**Goal:** User commits a prediction about the experiment outcome. This is the moment that creates cognitive conflict -- without a prediction, there is no "I was wrong" moment.
+
+**Duration:** 10-30 seconds (varies by prediction type).
+
+**HUD State:** Prediction input panel appears. 3D scene shows the experiment setup (objects in starting positions). Scene is static -- no simulation running.
+
+#### 6.2.1 Prediction Type: Trajectory Drawing
+
+**Use case:** "Where will the ball land?" / "What path will it follow?"
+**Phase 1 prevalence:** 70% of Projectile station challenges.
 
 **PC (Mouse):**
-1. User left-clicks on throwable object. Object lifts slightly (visual grab)
-2. User drags backward (opposite of throw direction). A direction arrow extends from the object showing the throw vector
-3. Arrow length = power (short = gentle, long = powerful). Color gradient: green (low) to amber (high)
-4. A faint dotted arc shows the *estimated* trajectory (not the full simulation -- just enough to hint at direction). This arc does NOT match the user's prediction -- it only helps with aiming
-5. User releases mouse button. Object launches. Camera may pan slightly to follow the object
-6. If object lands off-screen, camera auto-adjusts to show the landing zone
+1. Challenge prompt appears in HUD: "Draw where you think the ball will go."
+2. User clicks on the 3D viewport to place the starting point of the trajectory (snaps to the object's position).
+3. User drags to draw a freehand curve in 3D space (rendered as a glowing line projected onto a vertical plane).
+4. Release to complete the drawing.
+5. [Submit Prediction] button confirms. Drawing is editable -- user can redraw before submitting.
+
+```
++-------------------------------------------------------+
+|  "Where will the ball go?"                   [Skip]   |
+|                                                       |
+|          ~ ~ ~ ~ ~ ~ ~ (user's drawn curve)          |
+|         O                                             |
+|        /                                              |
+|   [ball]                                              |
+|   ==================== (ground plane)                 |
+|                                                       |
+|  [Redraw]                    [Submit Prediction]      |
++-------------------------------------------------------+
+```
 
 **Mobile (Touch):**
-1. Long-press (300ms) on throwable object. Haptic pulse confirms grab
-2. Drag backward. Same arrow/power indicator as PC
-3. Release finger. Object launches. Haptic burst on release
-4. Camera follows as needed
+Same interaction. Finger draws on the viewport. Larger touch targets for Redraw and Submit buttons (min 48x48pt). Drawing area receives all touch input (no scroll conflict since the 3D viewport is full-screen).
 
-**Physics feel:**
-- Launch velocity = drag distance * power multiplier (capped at engine-defined max)
-- Object inherits realistic physics from the moment of release
-- Satisfying trajectory: objects leave a faint trail (color-matched to lab accent)
-- Impact: collision particles + sound effect spatially positioned at impact point
+**Design Decisions:**
+- The drawn line is rendered as a distinct visual (e.g., dashed neon line) that looks different from the actual trajectory shown later in Discover. This prevents confusion during comparison.
+- Drawing precision is forgiving -- the error tolerance for "correct" is generous (especially at lower difficulties). Principle: P4 (Wrong is Wonderful) -- the prediction should feel low-stakes.
+- Redraw is always available (undo pattern). No "are you sure?" for redraw -- it is non-destructive.
+
+#### 6.2.2 Prediction Type: Binary Choice
+
+**Use case:** "Will it make it to the other side?" / "Which ball hits the ground first?"
+**Phase 1 prevalence:** ~40% of Energy station, ~12.5% of Wave station.
+
+**PC/Mobile:**
+1. Challenge prompt appears with two clear options.
+2. Two large buttons (or two highlighted zones in 3D space).
+3. Tap to select. Selection highlights immediately.
+4. [Submit Prediction] to confirm.
+
+```
++-------------------------------------------------------+
+|  "Which ball hits the ground first?"         [Skip]   |
+|                                                       |
+|         [Ball A]           [Ball B]                   |
+|         (heavy)            (light)                    |
+|                                                       |
+|    +---------------+  +---------------+               |
+|    |   Ball A      |  |   Ball B      |               |
+|    |   (selected)  |  |               |               |
+|    +---------------+  +---------------+               |
+|                                                       |
+|                          [Submit Prediction]          |
++-------------------------------------------------------+
+```
+
+**Design Decisions:**
+- Options are presented as large cards or highlighted 3D objects, not radio buttons. This is a game, not a form. Fitts's Law: large targets reduce selection effort.
+- Selection provides immediate visual feedback (highlight, scale, or material change on the 3D object). Principle: Doherty Threshold (< 100ms feedback).
+- No "I don't know" option. Per P4, guessing is fine and encouraged. The system should make it clear that wrong predictions are part of the experience.
+
+#### 6.2.3 Prediction Type: Pattern Selection
+
+**Use case:** "What interference pattern will form?" / "What happens when the pendulum is released?"
+**Phase 1 prevalence:** ~10% of Projectile, ~40% of Energy, ~37.5% of Wave.
+
+**PC/Mobile:**
+1. Challenge prompt with 3-4 visual options (diagrams or mini-animations).
+2. Tap to select. Visual highlight on selection.
+3. [Submit Prediction] to confirm.
+
+```
++-------------------------------------------------------+
+|  "What pattern will the waves create?"       [Skip]   |
+|                                                       |
+|  +----------+  +----------+  +----------+             |
+|  | Pattern A |  | Pattern B |  | Pattern C |           |
+|  | (diagram) |  | (diagram) |  | (diagram) |           |
+|  +----------+  +----------+  +----------+             |
+|                  (selected)                            |
+|                                                       |
+|                          [Submit Prediction]          |
++-------------------------------------------------------+
+```
+
+**Design Decisions:**
+- Options are visual, not text. For younger users (Seoyeon), pictures communicate faster than descriptions. Principle: Cognitive Load (recognition over recall).
+- 3-4 options maximum. More causes decision paralysis. Hick's Law.
+- Options are randomized in order to prevent position bias.
+
+#### 6.2.4 Prediction Type: 3D Placement
+
+**Use case:** "Where should you place the reflector for the wave to reach the target?" / "Where will the projectile land?"
+**Phase 1 prevalence:** ~20% of Projectile, ~10% of Energy, ~50% of Wave.
+
+**PC (Mouse):**
+1. Challenge prompt: "Place the marker where you think [X] will happen."
+2. A draggable 3D marker appears near the user's cursor.
+3. User clicks and drags the marker to a position in 3D space (snaps to valid surfaces).
+4. [Submit Prediction] to confirm.
+
+**Mobile (Touch):**
+1. Same flow. Tap-and-drag the marker. Two-finger rotate to view from different angles if needed.
+
+**Design Decisions:**
+- The marker has a large hit volume (inflated beyond visual size) per 3D interaction patterns.
+- Snap guides or surface constraints prevent placing the marker in impossible locations (inside objects, outside the scene).
+- Ghost outline shows where the marker will land when hovering over valid surfaces. Principle: feedback for every action.
+
+#### 6.2.5 Skip Behavior
+
+Available for all prediction types. Skip flow:
+
+1. User taps [Skip].
+2. First time in session: gentle nudge appears -- "Predictions make the experiment more fun. Give it a try?" + [Try It] + [Skip Anyway].
+3. Subsequent skips: immediate skip without nudge. We respect the user's choice. (Anti-pattern: guilt-tripping in onboarding copy).
+4. When skipped: Play phase runs immediately. Discover phase shows the result without a comparison overlay (since there is no prediction to compare).
+
+Analytics: `predict_skip` event fires with station_id and challenge_id.
+
+### 6.3 Play Phase
+
+**Goal:** User performs the experiment using God Hand (1st-person tabletop manipulation).
+
+**Duration:** 5-30 seconds depending on challenge complexity.
+
+**HUD State:** Minimal. Only essential info (current challenge label, exit button). The 3D viewport and God Hand interaction are the entire focus. Principle: P3 (The 3D is the Interface).
+
+#### 6.3.1 God Hand Interaction Patterns
+
+God Hand is the unified interaction model: the user is a disembodied experimenter manipulating objects on a tabletop. No avatar, no character -- just direct manipulation.
+
+**Throw / Launch:**
+
+| Input | Action | Feedback |
+|-------|--------|----------|
+| PC Mouse | Click object -> drag in launch direction -> release | Velocity arrow appears during drag (shows direction + magnitude). Object launches on release. |
+| Mobile Touch | Tap object -> swipe in direction -> release | Same velocity arrow. Haptic pulse on release (where supported). |
+| XR [Phase 2+] | Grab object -> swing arm -> release | Physical throwing motion. Haptic on release via controllers. |
+
+- Velocity arrow during drag gives users feedforward about the launch (Principle: show information needed for current decision).
+- Drag distance = launch speed. Visible mapping prevents surprise. The arrow updates in real-time during drag.
+- Post-release: camera may auto-follow the projectile (smooth tracking, user can override with manual camera movement).
+
+**Assemble / Place:**
+
+| Input | Action | Feedback |
+|-------|--------|----------|
+| PC Mouse | Click object -> drag to position -> release | Ghost preview at target location. Snap to valid positions. Green highlight = valid, red = invalid. |
+| Mobile Touch | Tap-hold -> drag -> release | Same ghost preview. |
+
+**Push / Pull:**
+
+| Input | Action | Feedback |
+|-------|--------|----------|
+| PC Mouse | Click object -> drag toward/away | Object moves with direct mapping. Spring physics for resistance. |
+| Mobile Touch | Tap-hold -> drag | Same. |
+
+**Install / Remove:**
+
+| Input | Action | Feedback |
+|-------|--------|----------|
+| PC Mouse | Click to pick up -> drag to mount point -> release | Mount point glows when within snap range. Click animation on attachment. Audio click. |
+| Mobile Touch | Tap-hold -> drag -> release near mount point | Same. |
+
+**Shake Space:**
+
+| Input | Action | Feedback |
+|-------|--------|----------|
+| PC Keyboard | Hold Shift + mouse drag on empty space | Camera shakes subtly. Objects in scene respond to applied force. |
+| Mobile Touch | Two-finger shake gesture | Same effect. |
+
+#### 6.3.2 Camera Controls During Play
+
+The user may need to adjust the camera to see the experiment from different angles.
+
+| Action | PC Input | Mobile Input |
+|--------|----------|-------------|
+| Orbit | Right-click + drag | Two-finger drag |
+| Zoom | Scroll wheel | Pinch |
+| Pan | Middle-click + drag | Three-finger drag [or shift + two-finger drag] |
+| Reset view | Double-click empty space / R key | Double-tap empty space |
+
+**Design Decisions:**
+- Left-click is reserved for God Hand object interaction. Camera controls use right-click / middle-click to avoid conflict. This differs from standard 3D viewer conventions (left-click = orbit) because object interaction takes priority.
+- On mobile, single-finger on empty space could be camera orbit. Single-finger on an object is God Hand interaction. This distinction is critical -- hit testing must be precise.
+- Camera has soft boundaries: cannot go below the tabletop, cannot go inside objects, minimum and maximum zoom distances set per challenge.
+- Smooth damping on all camera movements (3D Design reference: movement must feel natural).
+
+#### 6.3.3 Simulation Playback
+
+- Simulation runs in real-time after God Hand action.
+- Some challenges have a "slow-motion" replay option available after the simulation completes (toggle button in HUD).
+- Simulation cannot be paused mid-run in Phase 1. The experiment runs to completion.
+- If the simulation runs longer than expected (> 15s), a "skip to result" option fades in.
+
+### 6.4 Discover Phase
+
+**Goal:** Compare prediction with reality. Understand why. Feel motivated to try the next challenge.
+
+**Duration:** 15-60 seconds (user-controlled -- they choose how deep to go).
+
+**HUD State:** Comparison overlay on the 3D scene + explanation panel.
+
+#### 6.4.1 Comparison Overlay
+
+The 3D scene shows the result of the experiment. If the user made a prediction:
+
+- **Trajectory:** The predicted line (dashed, colored A) and actual trajectory (solid, colored B) are both visible in 3D space. Areas of divergence are highlighted.
+- **Binary:** The chosen option has a checkmark or X, with the correct answer highlighted.
+- **Pattern:** The chosen pattern and actual pattern shown side by side.
+- **3D Placement:** The predicted marker and actual result position are both visible, with a distance line between them.
+
+**Outcome Framing:**
+
+Per P4 (Wrong is Wonderful), framing differs from typical "correct/incorrect":
+
+| Outcome | Heading | Tone |
+|---------|---------|------|
+| Correct (within tolerance) | "Nice prediction!" | Celebratory but brief -- quickly moves to "here's why this works" |
+| Close (partially correct) | "Almost! Look at the difference here..." | Curious, points to specific divergence |
+| Wrong | "Interesting! Let's see what happened..." | Discovery-oriented, no penalty language |
+| Skipped prediction | "Here's what happened." | Neutral -- just shows the result |
+
+**UX copy rules for Discover:**
+- Never use "wrong," "incorrect," "failed," or "error" to describe the user's prediction.
+- Use "difference," "gap," "what actually happened" instead.
+- Frame the explanation as something the user is discovering, not being told.
+
+#### 6.4.2 Explanation Panel (Discover Depth)
+
+The explanation panel slides in from the right (PC) or bottom (mobile). It contains:
+
+**Level 1 -- Intuitive Analogy** (default for first few challenges, younger users):
+- One sentence analogy: "Heavy objects don't fall faster -- they all fall at the same speed, like dropping a bowling ball and a baseball in space."
+- Visual: Simple illustration or short looping animation.
+
+**Level 2 -- Conceptual Explanation** (default for most users):
+- 2-3 sentences explaining the physics concept.
+- Key concept highlighted and added to the user's knowledge graph.
+- "Gravity pulls everything at the same rate. Mass doesn't matter -- only air resistance does. In a vacuum, a feather and a hammer hit the ground at the same time."
+
+**Level 3 -- With Formulas** (opt-in via settings or expandable section):
+- Full equation with variable labels.
+- "F = mg, where g = 9.8 m/s^2 regardless of mass m."
+- Interactive: user can see how changing variables affects the equation (links back to Play phase for experimentation).
+
+**Depth Selection Logic:**
+1. User's setting in Settings page sets the base depth.
+2. Adaptive engine may suggest a higher depth if user has been consistently correct (they may be ready for more detail).
+3. Each level is expandable -- Level 1 has a "Learn more" link to Level 2, and Level 2 has "See the math" to Level 3. Progressive disclosure per Cognitive Load Theory.
+
+```
++-------------------------------------------------------+
+|                                                       |
+|   [3D Scene with comparison overlay visible]          |
+|                                                       |
+|                +-----------------------------+        |
+|                | Interesting!                 |        |
+|                |                             |        |
+|                | The ball followed a          |        |
+|                | parabolic arc because        |        |
+|                | gravity pulls it down at a   |        |
+|                | constant rate while it moves  |        |
+|                | forward.                     |        |
+|                |                             |        |
+|                | [See the math ->]           |        |
+|                |                             |        |
+|                | Related: Try this concept    |        |
+|                | in a different environment   |        |
+|                | [Phase 3+]                  |        |
+|                +-----------------------------+        |
+|                                                       |
+|  [Replay]         [Try Different Settings]            |
+|                          [Next Challenge]             |
++-------------------------------------------------------+
+```
+
+#### 6.4.3 Post-Discover Actions
+
+| Action | Button Label | Behavior |
+|--------|-------------|----------|
+| Next challenge | "Next Challenge" | Adaptive engine selects the next challenge. Brief transition. |
+| Replay experiment | "Replay" | Re-runs the same simulation (no prediction, just replay). |
+| Try with different settings | "Try Different Settings" | Re-enters the same challenge type with modified variables. |
+| Change station | Station selector in HUD | Switches to a different station within the same space. |
+| Exit to hub | Exit button in HUD | Portal transition back to Hub page. |
+
+"Next Challenge" is the primary action (visually dominant). Others are secondary. Principle: Von Restorff Effect -- one action stands out.
+
+#### 6.4.4 Cross-Engine Recommendations [Phase 3+]
+
+When the current concept connects to another engine's content:
+
+```
++----------------------------------------------+
+|  This concept appears in another space:       |
+|                                               |
+|  "The Doppler effect in sound waves is the    |
+|   same principle that makes distant galaxies  |
+|   appear red."                                |
+|                                               |
+|  [Explore in Space Observatory]               |
++----------------------------------------------+
+```
+
+If the target space is locked, the CTA changes to show unlock progress: "Complete Mechanics Lab to unlock the Space Observatory (70% done)."
 
 ---
 
-## 10. 3D Lab Visual Design
+## 7. HUD Design
 
-Each lab is a distinct game stage with its own visual identity, atmosphere, and personality. Users should immediately know which lab they are in from visuals alone.
+The HUD (Heads-Up Display) is the 2D overlay layer rendered on top of the full-screen 3D viewport when the user is inside a lab.
 
-### 10.1 Mechanics Lab (역학 실험실) [Phase 1]
+### 7.1 HUD Layout Principles
 
-**Theme: Industrial Workshop Playground**
+1. **Peripheral placement:** HUD elements sit at screen edges, leaving the center 70%+ of the viewport clear for the 3D scene. Principle: P3 (The 3D is the Interface) -- the simulation is always the visual focus.
 
-A stylized workshop/garage where physics experiments happen. Think a cross between a clean Japanese workshop, a pinball machine's internals, and a science toy store. Warm, bright, inviting -- this is where everyone starts, so it must feel accessible.
+2. **Translucent backgrounds:** All HUD panels use semi-transparent backgrounds (glass-morphism style) so the 3D scene remains partially visible behind them. Opacity: 75-85% on light theme, 80-90% on dark theme.
 
-**Environment:**
-- **Setting:** An open workshop with high ceilings, large windows letting in warm afternoon light. Wooden workbenches, metal rails, pegboard walls with tools
-- **Floor:** Warm wood planks with subtle grid lines etched in (visual reference for measurement). Slightly worn, lived-in feel
-- **Walls:** White-tiled lower half (like a laboratory), exposed brick upper half with pegboard tool displays. Large blackboard on one wall with chalk physics diagrams (decorative, not interactive)
-- **Ceiling:** Exposed wooden beams with industrial pendant lights. Skylights cast warm volumetric light shafts
-- **Tabletop:** Each station has its own experiment table. Projectile Station: a flat launching platform with trajectory measurement rails. Energy Station: an elevated marble-run framework. Wave Station: a shallow water table with ripple generators
+3. **Context-driven visibility:** HUD elements appear and disappear based on the current core loop phase. Nothing is permanently visible except the exit button and the station indicator.
 
-**Lighting:**
-- Key light: Warm directional (late afternoon sun through windows). Color temperature: 5500K
-- Fill: Cool ambient bounce from blue sky through windows. Subtle
-- Rim: Strong rim light from skylights, separating objects from background
-- Accent: Edison-style pendant bulbs above each station (point lights, warm glow)
-- Overall mood: Bright and warm. No dark corners. Legibility is paramount
+4. **No hover-only interactions:** All HUD interactions work with click/tap. Hover provides enhancement (tooltips, highlights) but is never required. Critical for mobile and future XR. (Anti-pattern: hover-only interactions on touch devices).
 
-**Materials:**
-- Wood: warm oak tone with subtle grain. Semi-stylized (visible grain but not photorealistic)
-- Metal: brushed steel with soft reflections. Slightly exaggerated specular highlights for game feel
-- Glass: used for measurement markings, slightly frosted. Emissive edges (faint glow)
-- Rubber: for ball objects and bumpers. Matte, saturated colors (red ball, blue bumpers)
-- Chalk: for decorative wall formulas. Slightly glowing for readability
+### 7.2 HUD Zones
 
-**Interactive objects style:**
-- Slightly oversized relative to the tabletop (toy-like proportion)
-- Bright, saturated colors distinct from the neutral environment
-- Subtle hover glow (sky blue outline, 2px) for interactive objects
-- Selected objects: brighter glow + gentle pulse (scale 100% to 102% at 2Hz)
-
-**Particles/VFX:**
-- Dust motes floating in light shafts (subtle atmosphere)
-- Launch trails: faint blue smoke/vapor trail behind thrown objects
-- Collision sparks: small burst of warm amber particles at impact points
-- Energy conservation: glowing energy indicators (like neon markers) showing kinetic/potential energy
-- Wave ripples: concentric ring effects on the water table surface
-
-**Sound:**
-- Ambient: Quiet workshop hum. Occasional distant metallic clink. Clock ticking softly
-- BGM: Light, curious, slightly playful. Acoustic instruments (xylophone, soft piano, gentle percussion). 90-100 BPM. Think "science curiosity" not "epic adventure"
-- SFX: Wooden clunks for placement, metallic pings for collisions, whoosh for throws, water plops for waves
-
-**Spatial layout:**
 ```
-[Camera default position: slightly above, looking down at center]
-
-         +--BLACKBOARD WALL--+
-         |                   |
- [WAVE   |                   | ENERGY
- STATION]|     OPEN SPACE    | STATION]
-         |    (camera orbit) |
-         |                   |
-         +---WINDOWS---------+
-              |
-         [PROJECTILE STATION]
-              |
-         [ENTRANCE / PORTAL]
++-------------------------------------------------------+
+| [Exit]  Station: Projectile (8/10)          [Sound] [?]|  <- TOP BAR
+|                                                        |
+|                                                        |
+|                                                        |
+|                   (3D VIEWPORT)                        |
+|                   (Clear zone - no HUD)                |
+|                                                        |
+|                                                        |
+|                                                        |
+|                                           [Panel  ]   |  <- RIGHT PANEL
+|                                           [Slides ]   |     (Predict/Discover content)
+|                                           [In/Out ]   |
+|                                                        |
+| [Station Nav]            [Phase-specific controls]     |  <- BOTTOM BAR
++-------------------------------------------------------+
 ```
 
-Stations are spaced around the workshop. Camera pans between them during station switching (600ms). Each station has its own workbench and distinctive equipment.
+### 7.3 HUD Elements by Phase
 
-### 10.2 Molecular Lab (분자 실험실) [Phase 3]
+#### Always Visible
 
-**Theme: Neon Bio-Laboratory**
+| Element | Position | Purpose |
+|---------|----------|---------|
+| Exit button | Top-left | Return to Hub. Always one tap away. |
+| Station indicator | Top-center | Shows current station and challenge progress (e.g., "Projectile 8/10") |
+| Sound toggle | Top-right | Mute/unmute sound effects and music |
+| Help button | Top-right (next to sound) | Contextual help overlay. Shows control hints for current phase. |
 
-A futuristic clean-room laboratory with bioluminescent aesthetics. Where the Mechanics Lab is warm and homey, the Molecular Lab is cool, precise, and awe-inspiring -- like looking inside a cell under a blacklight.
+#### Predict Phase
 
-**Environment:**
-- **Setting:** A sleek, circular clean room. White floor and walls with recessed lighting channels. A central holographic display pedestal where molecules float and rotate
-- **Floor:** Glossy white with subtle hexagonal pattern (molecular grid). Emissive lines in deep violet trace paths between stations
-- **Walls:** Smooth white panels with recessed LED strips in violet and cyan. Display screens showing molecular data (decorative). Curved glass partitions between stations
-- **Ceiling:** Low, domed, with a central emissive ring that changes color based on the active molecule (reflects element colors)
-- **Tabletop:** The experiment "table" is a holographic projection field -- a translucent, glowing platform where molecular models float above a dark surface. Objects hover magnetically
+| Element | Position | Purpose |
+|---------|----------|---------|
+| Challenge prompt | Top-center (below station indicator) | The prediction question |
+| Prediction input | Center or right panel | Depends on prediction type (drawing canvas, choice buttons, pattern cards, 3D marker) |
+| Skip button | Top-right of prediction panel | Skip this prediction |
+| Submit button | Bottom of prediction panel | Confirm prediction |
 
-**Lighting:**
-- Key light: Cool overhead wash (6500K, blue-white)
-- Fill: Bioluminescent glow from molecular models themselves -- objects are light sources
-- Rim: Violet edge light from wall LED strips
-- Accent: Cyan spotlights on station pedestals. Deep violet underglow from floor channels
-- Overall mood: Cool, precise, awe-inspiring. Dark background with bright, glowing objects
+#### Play Phase
 
-**Materials:**
-- Atoms: Smooth, translucent spheres with inner glow. CPK-inspired colors but more saturated and luminous (carbon = deep blue-black with teal glow, oxygen = vibrant red-orange with warm glow, nitrogen = deep indigo with purple glow, hydrogen = white with soft pearl luminescence)
-- Bonds: Glowing cylindrical connections between atoms. Single bonds = solid glow, double bonds = twin parallel glow, triple bonds = helix pattern
-- Electron clouds: Semi-transparent volume with subtle animated texture (like aurora borealis inside an orbital shape)
-- Lab surfaces: Frosted glass, brushed chrome, matte black. Clinical precision feel
-- Holographic platform: Translucent with grid-line projection. Objects cast no shadow on it (they float)
+| Element | Position | Purpose |
+|---------|----------|---------|
+| Interaction hint (first time) | Bottom-center | "Click and drag the ball to throw it" -- dismisses on first interaction |
+| Timer (if applicable) | Top-right | Some challenges have time-based elements |
 
-**Interactive objects style:**
-- Atoms and molecules glow from within. Selected atoms pulse their glow brighter
-- Grabbing an atom: connected bonds stretch elastically, other atoms trail behind with physics spring
-- Scale-switch: zooming in reveals electron clouds; zooming out shows the full molecular structure. Transition is continuous and smooth
-- Snap feedback: when atoms bond correctly, a satisfying "click" animation -- bond snaps into place with a flash
+Minimal HUD during Play. The user's focus should be entirely on the God Hand interaction.
 
-**Particles/VFX:**
-- Electron orbital visualization: faint particle paths tracing orbital shapes around atoms
-- Bond formation: burst of photons (small bright particles) when bonds form
-- Bond breaking: sparks + brief shockwave ripple
-- Ambient: floating molecular fragments, slowly rotating background structures
-- Reaction kinetics: energy heat-map glow on molecules during reactions
+#### Discover Phase
 
-**Sound:**
-- Ambient: Deep electronic hum. Occasional crystalline chime. "Digital biology" atmosphere
-- BGM: Electronic ambient. Pulsing bass, crystalline synth pads, gentle arpeggiators. 80-90 BPM. Think "microscopic wonder" -- Nils Frahm meets science documentary
-- SFX: Magnetic snap for bonds forming, glass chime for electron transitions, deep resonance for molecular vibrations, bubble pop for bond breaking
+| Element | Position | Purpose |
+|---------|----------|---------|
+| Outcome heading | Top-center | "Nice prediction!" / "Interesting! Let's see..." |
+| Explanation panel | Right side (PC) / Bottom sheet (mobile) | Discover depth content (Level 1/2/3) |
+| Action buttons | Bottom of explanation panel | "Next Challenge," "Replay," "Try Different Settings" |
+| Comparison toggle | Bottom-left | Toggle prediction overlay on/off to see the result clearly |
 
-### 10.3 Space Observatory (우주 관측소) [Phase 4]
+### 7.4 HUD Sizing and Spacing
 
-**Theme: Cosmic Observation Deck**
+| Element | PC Minimum | Mobile Minimum |
+|---------|-----------|----------------|
+| Buttons | 36x36px visual, 44x44px hit area | 44x44pt visual, 48x48pt hit area |
+| Text | 14px minimum | 16px minimum |
+| Panel width | 320px (right panel) | Full width (bottom sheet) |
+| Panel max-height | 60% viewport height | 50% viewport height |
+| Margin from viewport edges | 16px | 12px |
 
-An observation platform floating in space with a massive viewport showing the cosmos. The user is a celestial observer with god-like ability to place stars, launch planets, and manipulate orbits. Vast, awe-inspiring, humbling.
+### 7.5 HUD Transitions
 
-**Environment:**
-- **Setting:** A circular observation platform with a transparent dome ceiling showing a stunning nebula/star field skybox. The platform sits in deep space -- no ground, no horizon, just cosmos in every direction
-- **Floor:** Dark metallic with embedded star-map projections (constellation lines glow faintly). Subtle holographic grid for measurement reference
-- **Walls:** There are no traditional walls. The "boundary" is a low railing with holographic data displays floating along the edge. Beyond the railing: infinite space
-- **Ceiling:** Full transparent dome showing the dynamic skybox. Stars move subtly (parallax on camera orbit). Nebulae glow with subtle color shifts
-- **Tabletop:** The experiment space is a large orrery (solar system model) floating at the center of the platform. Planets and stars are miniaturized to tabletop scale but maintain relative proportions. The orrery can be expanded/contracted by the user
+| Transition | Animation | Duration |
+|------------|-----------|----------|
+| Phase change (Predict -> Play) | Prediction panel slides out right, play hints fade in | 300ms |
+| Phase change (Play -> Discover) | Explanation panel slides in from right | 300ms |
+| Station switch | All HUD elements cross-fade | 200ms |
+| HUD element appear | Fade in + slight slide from edge | 200ms ease-out |
+| HUD element dismiss | Fade out + slight slide to edge | 150ms ease-in |
 
-**Lighting:**
-- Key light: Star light -- a dominant point light at the center of the orrery (the "sun"), casting warm directional light. Color temperature varies by scenario (young blue star vs old red giant)
-- Fill: Nebula light -- subtle colored ambient from the skybox. Changes with active scenario
-- Rim: Observatory instrument glow -- accent lights from the platform railings
-- Accent: Star twinkle points in the skybox. Planet surfaces have self-illumination on the sun-facing side
-- Overall mood: Dark and vast, with brilliant focal points. High contrast between the dark void and glowing celestial objects
-
-**Materials:**
-- Planets: Stylized spheres with painted surface textures (not photorealistic terrain, more like painted globes). Atmosphere halos around gas giants. Ring systems with translucent particles
-- Stars: Emissive spheres with corona flare effect. Pulsing glow at realistic rates for variable stars
-- Orbits: Faint glowing elliptical lines (prediction: dashed in indigo, result: solid in mint/gold)
-- Platform: Dark brushed metal with emissive inlay patterns (star maps, coordinates)
-- Holographic displays: Floating panels with data readouts (velocity, period, distance). Translucent cyan on dark background
-
-**Interactive objects style:**
-- Celestial objects glow and have visible gravitational influence zones (faint radial gradient around massive objects)
-- Grabbing a planet: orbit path highlights, velocity vector arrow appears
-- Placing a planet: gravitational interaction preview shows where other objects will be affected (subtle field distortion visualization)
-- Time manipulation: scrubbing a timeline slider fast-forwards/rewinds orbits. Objects leave trail paths showing their orbital history
-
-**Particles/VFX:**
-- Star field: thousands of distant stars in the skybox, some twinkling
-- Comet tails: glowing particle trails on fast-moving objects
-- Gravitational lensing: subtle light bending near massive objects (simplified but visually striking)
-- Galaxy collision: particle spray of displaced stars during galaxy merger scenarios
-- Tidal forces: visible stretching/compression particles on affected bodies
-- Launch: rocket flame effect when placing a planet with initial velocity
-
-**Sound:**
-- Ambient: Deep space drone. Low-frequency rumble suggesting cosmic scale. Distant stellar wind. Occasional radio-telescope pulses (like real space sounds converted to audible frequency)
-- BGM: Ambient orchestral. Deep strings, ethereal choir pads, gentle brass swells. 60-70 BPM. Think "cosmic contemplation" -- Interstellar score meets planetarium show
-- SFX: Deep gravitational throb when placing massive objects, high-pitched streak for fast-moving objects, resonant chime for orbital resonance, bass impact for collisions
-
-### 10.4 Quantum Lab (양자 연구소) [Phase 5]
-
-**Theme: Probability Dreamscape**
-
-A surreal, dreamlike laboratory where certainty dissolves. The visual language itself embodies uncertainty -- objects shimmer between states, edges blur, particles exist as probability clouds. This lab should feel like no other -- entering it should provoke wonder and slight disorientation (controlled). It is the final lab, the capstone experience, and visually the most bold.
-
-**Environment:**
-- **Setting:** An abstract space that is neither a room nor outdoors -- something in between. A platform of dark matter with floating equipment, surrounded by a shifting, iridescent void. Think the inside of a quantum computer's logic, visualized as a space you can stand in
-- **Floor:** Semi-transparent dark surface with probability density patterns flowing underneath like an ocean current. When the user steps (moves camera), ripples form -- the "observer effect" visualized. Grid lines appear and dissolve continuously
-- **Walls:** None in the traditional sense. The "boundary" is a horizon where reality becomes blurred -- shapes dissolve into probability smears. Color shifts between magenta, cyan, and deep violet at the edges
-- **Ceiling:** An infinite gradient from dark center to luminous edges. Occasional "quantum fluctuation" bursts -- brief flashes of light that pop in and out of existence at random positions
-- **Tabletop:** The experiment apparatus varies dramatically by challenge: double-slit barrier, particle emitter, measurement devices, Schrodinger box. Each floats on its own anti-gravity platform
-
-**Lighting:**
-- Key light: Diffuse, directionless. Objects are lit from all sides equally -- no strong shadows. This reinforces the "uncertainty" feel (you cannot pin down where the light comes from)
-- Fill: Emissive objects provide their own light. Particles glow from within
-- Rim: Iridescent edge light (shifts color based on viewing angle)
-- Accent: Intense localized glow at measurement points (when the user "observes," light concentrates)
-- Overall mood: Dreamy, surreal, slightly unsettling in an exciting way. Neither bright nor dark -- existing in superposition
-
-**Materials:**
-- Particles: NOT solid spheres. Probability clouds -- translucent, shimmering volumes that condense into points only when "measured." Before measurement: blurred, wave-like. After measurement: sharp, particle-like. This visual transition IS the core teaching moment
-- Double-slit apparatus: Dark matter frame with glowing slits. Detection screen shows interference pattern building up particle by particle
-- Observer toggle: A physical switch/detector device with glowing "eye" icon. ON state: everything becomes sharp and particle-like. OFF state: everything becomes fuzzy and wave-like. The visual transformation is dramatic and immediate
-- Measurement devices: Sleek, minimalist tools with glowing displays. When placed, they "collapse" nearby probability clouds into definite states
-- Lab surfaces: Iridescent, semi-transparent. Materials that shift appearance based on viewing angle (like holographic cards)
-
-**Interactive objects style:**
-- Objects exist in superposition visually -- they shimmer between 2-3 possible positions/states until interacted with
-- Selecting an object "partially collapses" it -- it becomes more defined but not fully
-- Measuring an object fully collapses it -- snaps to definite position with a brief flash and "collapse" particle effect
-- The observer toggle is the lab's signature interaction: flipping it transforms the entire scene's visual language in 0.5 seconds
-
-**Particles/VFX:**
-- Probability clouds: constant, flowing, translucent volumes around all quantum objects
-- Wave function: visualized as oscillating, glowing wave patterns that pass through slits and interfere
-- Collapse effect: dramatic -- probability cloud implodes into a point with a ring shockwave expanding outward
-- Tunneling: particle appears to "phase through" a barrier with a ghostly after-image
-- Entanglement: paired particles connected by a shimmering, elastic thread of light that spans any distance
-- Quantum fluctuations: random micro-bursts of light in the void (reinforcing "nothing is certain here")
-
-**Sound:**
-- Ambient: Ethereal drone with random micro-sounds (clicks, pops, whispers) at random positions -- the audio equivalent of quantum fluctuations. Spatially positioned for XR
-- BGM: Experimental ambient electronic. Granular synthesis textures, reversed piano, glitching patterns that occasionally resolve into melody. 70-80 BPM. Think "beautiful uncertainty" -- Boards of Canada meets Ryoji Ikeda
-- SFX: Collapse = sharp resonant ping + bass drop. Tunneling = phase-shift sweep. Observer ON = focusing crystalline tone. Observer OFF = dissolving blur sound. Entanglement = harmonic resonance between two spatial positions
+All transitions respect `prefers-reduced-motion`: when enabled, transitions become instant cuts (no animation).
 
 ---
 
-## 11. Prediction Type UX
+## 8. Navigation Model
 
-### 11.1 Trajectory Drawing
+### 8.1 Two Worlds: 2D and 3D
 
-**Use cases:** Projectile motion, orbital paths, wave propagation paths
+PhysPlay has two distinct interface layers that never overlap:
 
-**PC interaction:**
-1. Bottom panel shows instruction: "Draw where you think the ball will go" / "공의 경로를 그려보세요"
-2. 3D viewport shows the static experiment setup with a designated "drawing surface" (slightly highlighted plane or the experiment table surface)
-3. User left-clicks and drags on the drawing surface. A smooth line follows the cursor in `prediction-line` color
-4. Line is rendered as a 3D ribbon/tube on the surface (not a flat overlay -- it exists in 3D space)
-5. Ctrl/Cmd+Z to undo last stroke. "Clear" button to erase all
-6. "Submit" button activates when at least one stroke is drawn
+| Layer | Pages | UI Style | Navigation |
+|-------|-------|----------|------------|
+| 2D (site/) | Landing, Hub, Progress, Settings | Standard web pages with top nav | URL-based routing (TanStack Router) |
+| 3D (experience/) | Lab experience | Full-screen 3D viewport + HUD | In-scene HUD controls (no URL changes) |
 
-**Mobile interaction:**
-1. Same instruction. A "Draw" button in the bottom panel toggles drawing mode
-2. In drawing mode: one-finger drag on viewport = draw (camera orbit disabled). Indicator shows "Drawing mode" with pen icon
-3. "Done Drawing" button exits drawing mode (returns to camera orbit on one-finger drag)
-4. Undo and clear buttons visible during drawing mode
+**Architecture rule (from client-structure.md):** `site/` and `experience/` NEVER import each other. Cross-layer data flows through `shared/stores/`.
 
-**Evaluation visualization (Discover phase):**
-- User's prediction line stays visible (dashed, indigo)
-- Actual trajectory draws in (solid, mint green) alongside the prediction
-- Areas where prediction matches (within tolerance): both lines glow green
-- Areas where prediction diverges: divergence highlighted with orange gradient between the two lines
-- Numerical accuracy shown: "Your prediction was 78% accurate" / "예측 정확도: 78%"
+### 8.2 2D Navigation Bar
 
-### 11.2 Binary Choice
-
-**Use cases:** "Will it go through or bounce back?", "Left or right?", "Faster or slower?"
-
-**Layout:**
+Present on all 2D pages. Persistent, top of viewport.
 
 ```
-+---------------------------------------------------------------+
-|                                                                |
-|                   3D VIEWPORT                                  |
-|                   (static setup)                               |
-|                                                                |
-|  +-------------------------------------------------------------+
-|  | "Will this ball pass through the gap?"                       |
-|  | 이 공이 틈 사이를 통과할까요?                                    |
-|  |                                                              |
-|  |  +-------------------+    +-------------------+              |
-|  |  | [illustration A]  |    | [illustration B]  |              |
-|  |  |                   |    |                   |              |
-|  |  |  Yes, it passes   |    |  No, it bounces   |              |
-|  |  |  네, 통과해요        |    |  아니요, 튕겨요      |              |
-|  |  +-------------------+    +-------------------+              |
-|  |                                                              |
-|  |                                          [Skip] [Submit]     |
-|  +-------------------------------------------------------------+
++-------------------------------------------------------+
+|  [Logo] PhysPlay     [Hub] [Progress] [Settings]      |
++-------------------------------------------------------+
 ```
 
-**Interaction:**
-- Two large cards side by side. Each has a small illustration/icon and clear text label
-- Tap/click to select (blue outline appears). Tap again to deselect
-- Only one selectable at a time (radio behavior)
-- Submit activates when one is selected
-- On mobile: cards stack vertically if screen is narrow
+- **Logo:** Links to Hub (for returning users) or Landing (for first visitors).
+- **3-item nav:** Hub, Progress, Settings. Follows Miller's Law (5 +/- 2) and Serial Position Effect (most used items at edges).
+- **Active state:** Current page is visually highlighted (underline or fill).
+- **Mobile responsive:** Same items, possibly abbreviated labels or icon + label. No hamburger menu needed for only 3 items.
 
-**Evaluation visualization:**
-- Selected option: green border + checkmark (correct) or orange border + "Not quite" (incorrect)
-- Correct option highlighted regardless of user's choice
-- 3D simulation plays to show the actual outcome
+### 8.3 Portal Transition (2D <-> 3D)
 
-### 11.3 Pattern Selection
+The portal transition is the psychological gateway between the browsing/planning mode (2D) and the experimentation mode (3D). Per REQ-040, this must be dramatic enough to signal a mode change.
 
-**Use cases:** Interference patterns, collision outcomes, energy distribution diagrams
+**2D -> 3D (Entering Lab):**
+1. User selects a station from Hub.
+2. A portal effect begins: the selected space card expands to fill the screen.
+3. A brief wormhole/tunnel animation (0.8-1.2s) plays. During this time, the 3D scene loads in the background.
+4. The 3D environment materializes around the user. Camera settles at the default lab viewpoint.
+5. HUD fades in. Challenge is ready.
 
-**Layout:**
+**3D -> 2D (Exiting Lab):**
+1. User taps Exit in HUD.
+2. The 3D scene contracts into a portal (reverse of entry animation, 0.6-0.8s).
+3. Hub page appears underneath.
 
-```
-+---------------------------------------------------------------+
-|                                                                |
-|                   3D VIEWPORT                                  |
-|                   (static setup)                               |
-|                                                                |
-|  +-------------------------------------------------------------+
-|  | "Which pattern will the waves create?"                       |
-|  | 파동이 어떤 패턴을 만들까요?                                     |
-|  |                                                              |
-|  |  [A: thumbnail]  [B: thumbnail]  [C: thumbnail]              |
-|  |   Constructive    Destructive     Standing                   |
-|  |   보강 간섭         상쇄 간섭         정상파                      |
-|  |                                                              |
-|  |                                          [Skip] [Submit]     |
-|  +-------------------------------------------------------------+
-```
+**Fallback (reduced motion or slow device):**
+- Replace portal animation with a simple cross-fade (300ms).
+- Ensure the 3D scene is ready before the transition completes (no blank screens after the animation).
 
-**Interaction:**
-- 3-4 option thumbnails in a horizontal scroll row (mobile) or grid (desktop)
-- Each thumbnail is a small diagram or rendered preview showing the possible outcome
-- Tap to select (accent border + scale 105%). Tap again to deselect
-- Single selection only
-- Thumbnails should be visually distinct enough to differentiate at a glance
+**Loading during transition:**
+- If the 3D scene is not loaded by the time the portal animation finishes, hold on a progress indicator: "Setting up your experiment..." with a progress bar.
+- Never show a blank white/black screen. Always show either the transition animation or a progress indicator against the 2D page background.
 
-**Evaluation visualization:**
-- Correct option: green border + checkmark + "This one!" label
-- User's incorrect selection: orange border + "Your pick" label
-- 3D simulation replays showing how the actual pattern emerges
+### 8.4 In-Lab Navigation
 
-### 11.4 3D Placement
+Within the 3D lab, all navigation happens through the HUD:
 
-**Use cases:** Orbital placement, wave emitter positioning, quantum detector placement
+| Action | Control | Behavior |
+|--------|---------|----------|
+| Switch station | Station selector (bottom HUD) | Camera moves to new station area. Environment parameters adjust. No loading screen. |
+| Exit to hub | Exit button (top-left HUD) | Portal transition (3D -> 2D) back to Hub. |
+| Skip to next challenge | "Next Challenge" in Discover phase | In-place transition. Scene resets with new challenge parameters. |
+| Access settings | Not available in 3D lab | User must exit to Hub first. Settings are not urgent enough to warrant HUD presence during experiments. |
 
-**Interaction (PC):**
-- A draggable 3D marker/object appears at a default position
-- User clicks and drags the marker to their predicted position in 3D space
-- Snap-to-grid optional (visible grid lines on the experiment surface)
-- Position coordinates shown as user drags (for precision)
-- For multi-object placement: user places each object sequentially (one active at a time)
-
-**Interaction (Mobile):**
-- Same marker but with larger hit area
-- Long-press + drag to reposition
-- Snap-to-grid with haptic feedback at grid points
-
-**Evaluation visualization:**
-- User's placed marker remains visible (indigo ghost)
-- Correct position marker appears (green glow) at the actual position
-- Distance arrow between them if they differ
-- Accuracy: "Your placement was X units off" / "X만큼 차이가 있었어요"
+**Rationale for no settings in 3D:** Adding settings access to the HUD violates P2 (One Question at a Time) and P3 (The 3D is the Interface). The HUD should be minimal. Settings changes are infrequent and can wait until the user exits the lab.
 
 ---
 
-## 12. Discover Phase UX
+## 9. Onboarding UX
 
-### 12.1 Three-Depth Explanation System
+### 9.1 Philosophy
 
-Each concept has three levels of explanation. The user always starts at the appropriate level and can go deeper on demand.
+The onboarding IS the first challenge. There is no separate tutorial, no feature tour, no welcome carousel. This is the most aggressive possible interpretation of P1 (Immediate Action).
 
-| Level | Name | Target Audience | Content Style | Example (Gravity) |
-|-------|------|----------------|---------------|-------------------|
-| Level 1 | Intuitive Analogy / 직관적 비유 | Seoyeon (10), first encounter | Visual metaphor, no jargon, relatable comparison | "Gravity is like an invisible rubber band between the Earth and the ball. The heavier the ball, the stronger the rubber band pulls." |
-| Level 2 | Concept Explanation / 개념 설명 | Minjun (16), building understanding | Scientific terms introduced, cause-effect logic, diagrams | "Gravity is a force that acts between any two objects with mass. The force is proportional to the mass and inversely proportional to the square of the distance. This is why the ball curves downward." |
-| Level 3 | Mathematical / 수식 포함 | Jiyoung (29), formalizing intuition | Equations with explanations, derivations, unit analysis | "F = G(m1*m2)/r^2. At Earth's surface, this simplifies to F = mg where g = 9.8 m/s^2. Your throw gave the ball an initial velocity of v0 at angle theta, creating the parabolic path x(t) = v0*cos(theta)*t, y(t) = v0*sin(theta)*t - (1/2)gt^2." |
+**Why:** Contextual learning through doing is more effective than sequential explanation (UX Writing reference: show, don't tell). The core loop is simple enough (predict, experiment, see result) that the user can learn it by experiencing it once.
 
-### 12.2 Depth Selection Logic
+### 9.2 First 30 Seconds
 
-**Phase 1 (rule-based):**
-- First encounter with a concept: show Level 1
-- After 3+ challenges involving the concept: show Level 2
-- After 8+ challenges with high accuracy (>80%): show Level 3
-- User can always manually expand to deeper levels ("Deeper Explanation" accordion)
-- User can always collapse to shallower levels
+| Second | What Happens | UX Principle |
+|--------|-------------|-------------|
+| 0-2 | Landing page renders. One question + one button visible. | Doherty Threshold: < 2s to interactive |
+| 2-4 | User taps "Start Experimenting." Portal transition begins. | Peak-End Rule: first interaction sets the tone |
+| 4-7 | Portal transition completes. 3D lab appears. First challenge loaded. | 3D Loading: poster image -> progressive -> full quality |
+| 7-10 | Contextual hint: "Where will the ball land? Draw your prediction." | Cognitive Load: one instruction, one action |
+| 10-20 | User draws a prediction (or skips). Brief positive feedback. | P4: Wrong is Wonderful -- no risk in predicting |
+| 20-25 | User performs God Hand throw. Contextual hint for first interaction. | Direct manipulation: learn by doing |
+| 25-30 | Discover phase: comparison overlay + Level 1 explanation. | Peak-End: the "aha" moment is the peak experience |
 
-**Phase 2+ (AI-based):**
-- Model selects level based on user's concept mastery score, accuracy pattern, and time-on-explanation data
+### 9.3 Contextual Hints
 
-### 12.3 Discover Panel Layout
+Instead of a tutorial, PhysPlay uses contextual hints that appear at the moment they are needed and disappear after first use.
 
-```
-+---------------------------------------------------------------+
-|                                                                |
-|       3D VIEWPORT                                              |
-|       (prediction vs result overlay -- interactive)            |
-|                                                                |
-|  +-------------------------------------------------------------+
-|  |                                                              |
-|  |  [Correct/Incorrect badge]                                   |
-|  |                                                              |
-|  |  "Nice intuition!"                                           |
-|  |  잘 맞췄어요!                                                  |
-|  |                                                              |
-|  |  [Concept: Gravity / 중력]                                    |
-|  |  Gravity pulls the ball downward at a constant rate,          |
-|  |  creating a curved path called a parabola.                    |
-|  |  중력은 공을 일정한 속도로 아래로 끌어당겨,                         |
-|  |  포물선이라는 곡선 경로를 만듭니다.                                |
-|  |                                                              |
-|  |  [v Deeper Explanation]  <-- expandable                      |
-|  |                                                              |
-|  |  +----------+  +-----------------+  +---------+              |
-|  |  |  Replay  |  | Adjust Variables|  | Next -> |              |
-|  |  +----------+  +-----------------+  +---------+              |
-|  |                                                              |
-|  +-------------------------------------------------------------+
-```
+| Hint | When | Content | Dismissal |
+|------|------|---------|-----------|
+| Prediction | First Predict phase | "Draw where you think the ball will go." | On first drawing stroke |
+| God Hand | First Play phase | "Click and drag the ball to throw it." | On first object interaction |
+| Camera | First time user tries to look around | "Right-click + drag to look around." | On first camera orbit |
+| Discover depth | First Discover phase with expandable content | "Tap 'Learn more' for deeper explanation." | On first expansion or after 3 challenges |
+| Station switch | After first challenge complete | "Try other stations in the station bar below." | On first station switch or after 2 challenges |
 
-**Correct outcome framing:**
-- Badge: green circle with checkmark
-- Headline: positive reinforcement, not over-the-top ("Nice intuition!" not "AMAZING!!!")
-- Explanation reinforces why the prediction was correct
-- CTA emphasis: "Next" challenge (primary) or "Adjust Variables" (explore further)
+**Hint design:**
+- Appear as a floating label near the relevant element (not blocking the center viewport).
+- Semi-transparent background, small text.
+- Fade in with a subtle animation (200ms), dismiss with fade-out on trigger.
+- Never re-appear once dismissed (stored in local storage).
+- All hints have a small "x" to dismiss manually.
 
-**Incorrect outcome framing:**
-- Badge: orange circle with exploration icon (magnifying glass, not X mark)
-- Headline: curious, not punishing ("Interesting! Here's what happened" / "흥미로운 결과네요!")
-- Explanation focuses on the divergence: "Your prediction curved less than reality because..."
-- CTA emphasis: "Adjust Variables" to try again (primary) or "Next" (secondary) -- wrong answers should encourage re-exploration
+### 9.4 Hub Reveal
 
-*Principle: Peak-End Rule -- this is the "end" of each loop cycle. It must leave a positive emotional imprint regardless of correctness. The UX copy and visual treatment are calibrated to make wrong answers feel like discoveries, not failures (P2: The Wrong Answer Is the Product).*
+After the first challenge (onboarding challenge) is complete:
 
-### 12.4 Cross-Engine Discovery Card [Phase 3+]
+1. Discover phase completes normally.
+2. Instead of "Next Challenge," the CTA is "See Your Research Lab."
+3. Portal transition (3D -> 2D) brings the user to the Hub page.
+4. A brief first-time message: "Welcome to your research lab. You've unlocked the Mechanics Lab. Explore the stations and keep experimenting."
+5. Space map shows Mechanics Lab (unlocked) and other spaces (locked silhouettes).
+6. The message dismisses on any interaction or after 5 seconds.
 
-When the current concept connects to another lab's content:
-
-```
-+---------------------------------------------------------------+
-|  [Concept explanation above...]                                 |
-|                                                                |
-|  +------------------------------+                              |
-|  | Related Discovery             |                              |
-|  | 관련 발견                       |                              |
-|  |                               |                              |
-|  | "The Doppler effect you just   |                              |
-|  |  saw with waves is how we      |                              |
-|  |  measure how fast galaxies     |                              |
-|  |  are moving away from us."     |                              |
-|  |                               |                              |
-|  | [Explore in Space Observatory ->]                            |
-|  +------------------------------+                              |
-```
-
-- Card appears below the concept explanation with a distinctive border (gold/accent)
-- Only shown when the concept has a cross-reference entry in the knowledge graph
-- If the target lab is locked: "Complete [N] more to unlock the Space Observatory" (with silhouette preview)
-- If unlocked: direct navigation to the related challenge (portal transition)
+**Why reveal the Hub after the first challenge, not before?** Because the Hub is meaningless without context. After completing one Predict-Play-Discover loop, the user understands what they are selecting from the Hub. If we showed the Hub first, it would be an obstacle before the interesting part (violating P1).
 
 ---
 
-## 13. Onboarding UX
+## 10. Responsive Strategy
 
-### 13.1 First 30 Seconds (Onboarding Challenge)
+### 10.1 Approach: PC-First, Mobile-Adapted
 
-The onboarding IS the first challenge. There is no separate tutorial.
+PhysPlay is PC-first (REQ-057). The 3D lab experience is designed for mouse + keyboard as the primary input. Mobile is supported through responsive layout and touch gesture mapping that preserves the core experience.
 
-**Second 0-2: Landing page appears**
-- Minimal: tagline + "Start Experimenting" button
-- Background: 3D assets begin preloading
+### 10.2 Breakpoints
 
-**Second 2-4: Auto-transition (or user clicks)**
-- Portal transition begins. Landing fades, portal effect rushes forward
-- If 3D assets are still loading: portal effect plays over a progress indicator ("Loading your lab... 73%")
+| Breakpoint | Width | Target Device | Layout Strategy |
+|------------|-------|---------------|-----------------|
+| Desktop L | >= 1280px | Monitors, laptops | Full layout. Right panel for explanations. Generous spacing. |
+| Desktop | 1024-1279px | Small laptops | Slightly condensed. Right panel narrows. |
+| Tablet | 768-1023px | iPad, tablets | 2D pages: single column. 3D lab: bottom sheet instead of right panel. |
+| Mobile | 320-767px | Phones | 2D pages: fully stacked. 3D lab: bottom sheet, larger touch targets, simplified HUD. |
 
-**Second 4-6: Arrive in Mechanics Lab**
-- Camera settles at Projectile Station
-- A single ball sits on a launch platform. The scene is deliberately simple: one ball, one target area, clear tabletop
-- HUD fades in: question appears at bottom
+### 10.3 2D Pages (Hub, Progress, Settings) Responsive Rules
 
-**Second 6-12: Predict**
-- Question: "Where will this ball land?" / "이 공은 어디에 떨어질까요?"
-- Sub-instruction: "Draw the path you think it will follow" / "공이 날아갈 경로를 그려보세요"
-- Visual hint: a faint dotted arc pulses once from the ball to suggest the drawing area
-- If user hesitates (5s): tooltip appears next to the ball: "Click and drag to draw" / "클릭해서 그려보세요"
+| Element | Desktop | Mobile |
+|---------|---------|--------|
+| Space cards | 2x2 grid | Vertical stack (full width) |
+| Station chips | Horizontal row | Horizontal scroll or wrap |
+| Progress bars | Full width with labels | Full width, labels above bar |
+| Navigation | Top bar, text labels | Top bar, abbreviated labels or icons + text |
+| Content width | Max 960px, centered | Full width, 16px horizontal padding |
+| Settings | Single column, grouped | Single column, grouped (same) |
 
-**Second 12-18: Submit prediction**
-- User draws a line. "Submit" button pulses gently
-- On submit: prediction line locks in with a brief pulse animation
+### 10.4 3D Lab Responsive Rules
 
-**Second 18-24: Play**
-- Instruction: "Now drag the ball to throw it!" / "이제 공을 드래그해서 던지세요!"
-- Ball glows with interactive highlight
-- If user hesitates (3s): arrow animation appears showing the drag direction
-- User drags and throws. Ball flies with physics
+| Element | Desktop | Mobile |
+|---------|---------|--------|
+| 3D viewport | Full screen | Full screen |
+| HUD panels (Predict, Discover) | Right side panel (320px) | Bottom sheet (50-60% height, draggable) |
+| Buttons | 36px visual, 44px hit area | 44pt visual, 48pt hit area |
+| Text size | 14px minimum | 16px minimum |
+| God Hand interaction | Mouse click + drag | Touch tap + drag |
+| Camera orbit | Right-click + drag | Two-finger drag |
+| Station selector | Bottom bar with labels | Bottom bar with icons + labels (scrollable if needed) |
+| Explanation panel | Right side, scrollable | Bottom sheet, scrollable, three snap points (peek/half/full) |
 
-**Second 24-30: Discover**
-- Prediction overlay appears alongside actual trajectory
-- Brief explanation appears
-- Celebration effect (correct) or warm encouragement (incorrect)
+### 10.5 Touch Gesture Conflict Resolution
 
-**Second 30-60: Hub reveal**
-- After the first Discover phase, a gentle prompt: "There's more to explore. See your Research Hub." / "더 많은 실험이 기다리고 있어요. 연구소를 확인하세요."
-- Transition to Research Hub with a brief lab-overview animation showing all 4 lab silhouettes
-- Hub loads with Mechanics Lab unlocked, others as silhouettes
+On mobile, the 3D viewport occupies the full screen. This creates potential conflicts between page scrolling, camera controls, and God Hand interactions.
 
-### 13.2 Contextual Hints (Post-Onboarding)
+**Resolution strategy:**
 
-After the first challenge, hints appear only when:
-1. The user encounters a NEW interaction type they have not used before
-2. The user hesitates for >5 seconds on an action they have never performed
-3. The user is in a new station type for the first time
+1. **In 3D lab:** No page scrolling. The viewport captures all touch input. This is acceptable because the 3D lab is a full-screen experience, not a page with content below.
+2. **Object interaction vs. camera:** Single-finger on an object = God Hand interaction. Single-finger on empty space = camera orbit. Interaction mode is determined by hit testing against 3D objects.
+3. **HUD panels:** When a HUD panel (bottom sheet on mobile) is open, touches on the panel scroll the panel content. Touches outside the panel interact with the 3D scene.
+4. **Zoom:** Two-finger pinch anywhere = camera zoom (not page zoom). The viewport should use `touch-action: none` to prevent browser zoom interference.
 
-**Hint format:**
-- Small tooltip anchored to the relevant object/button
-- Arrow pointing to the interaction target
-- Brief text (max 8 words): "Pinch to zoom" / "핀치로 확대"
-- Auto-dismisses after 5 seconds or on any user interaction
-- "Got it" dismiss button for accessibility
+### 10.6 Minimum Viable Mobile Experience
 
-**Hints are shown maximum once per interaction type.** Stored in localStorage. Never shown again after dismissed.
+At 320px width (minimum supported), the 3D lab must still function:
 
-*Principle: Onboarding Copy Rules -- contextual over sequential, one concept per step, show don't tell, make it skippable. Doherty Threshold -- 30-second target keeps perceived speed high. Goal Gradient -- completing the first challenge creates momentum.*
+- Station selector shows icons only (no labels) in a horizontal scroll.
+- Bottom sheet is the only HUD panel layout (no side panels).
+- Prediction types adapt: trajectory drawing works with finger, but the drawing area may be smaller. Binary choice uses full-width stacked buttons.
+- Font size never goes below 16px (ergonomics reference).
 
 ---
 
-## 14. Responsive Design
+## 11. Accessibility
 
-### 14.1 Breakpoint Strategy
+### 11.1 Strategy
 
-PhysPlay is PC-first (REQ-057) but must work on mobile.
+PhysPlay has two distinct accessibility contexts:
 
-| Breakpoint | Width | Layout Strategy |
-|------------|-------|-----------------|
-| Desktop L | >= 1440px | Full experience. Hub: 2x2 lab card grid. 3D viewport: full-screen. HUD: all elements visible |
-| Desktop | 1024-1439px | Standard experience. Hub: 2x2 grid with smaller margins. 3D: full-screen |
-| Tablet | 768-1023px | Hub: 2x1 card stack. 3D: full-screen. HUD: station rail collapses to icon-only |
-| Mobile L | 428-767px | Hub: single column. 3D: full-screen with simplified HUD. Bottom panel becomes bottom sheet |
-| Mobile | 375-427px | Compact Hub. 3D: full-screen. HUD: minimal. Bottom panel = bottom sheet |
-| Mobile S | 320-374px | Same as Mobile but with tighter spacing. Minimum supported width |
+1. **2D pages (Hub, Progress, Settings):** Standard web accessibility (WCAG 2.1 AA). Full keyboard navigation, screen reader support, semantic HTML.
+2. **3D lab experience:** 3D viewports present inherent accessibility challenges. Phase 1 provides foundational accessibility; deeper 3D accessibility is Phase 2 (REQ-059 is P2).
 
-### 14.2 2D Pages Responsive Behavior
+### 11.2 2D Pages Accessibility (Phase 1)
 
-**Research Hub:**
-- Desktop: 2x2 lab card grid with generous spacing
-- Tablet: 2x1 or 2-column with narrower cards
-- Mobile: Single column. Cards are full-width with reduced thumbnail height. Locked cards show smaller preview
+#### Keyboard Navigation
 
-**Settings:**
-- Desktop/Tablet: Single column, centered, max-width 600px
-- Mobile: Full-width with 16px padding
+- All interactive elements reachable via Tab.
+- Logical tab order matches visual order (DOM order = visual order).
+- Enter/Space activates buttons and links.
+- Escape closes modals/overlays.
+- Focus indicator: 2px solid outline, 3:1 contrast against background.
+- Focus management: when navigating to a new page, focus moves to the main content heading.
 
-**Progress:**
-- Desktop: Station cards in a row with charts
-- Mobile: Stacked vertically. Charts simplified to progress bars
+```css
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
 
-### 14.3 3D Viewport Responsive Behavior
-
-The 3D viewport is always full-screen regardless of device. Responsive adaptations happen in the HUD and interaction model.
-
-**HUD adaptations:**
-
-| HUD Element | Desktop | Tablet | Mobile |
-|-------------|---------|--------|--------|
-| Top bar | Full: phase dots + station name + settings + exit | Same but condensed | Phase dots + hamburger menu (settings + exit) |
-| Station rail | Left edge, icon + label | Left edge, icon only | Hidden. Access via hamburger menu or swipe gesture |
-| Bottom panel (Predict) | Wide panel with full layout | Same, narrower | Bottom sheet (swipe up to expand) |
-| Bottom panel (Play) | Single-line instruction | Same | Same (auto-hides faster -- 2s) |
-| Bottom panel (Discover) | Wide panel with explanation | Same, narrower | Bottom sheet. Swipe up for full explanation |
-| Variable panel | Right side panel | Right side panel, narrower | Bottom sheet (full-width) |
-
-**Mobile-specific HUD rules:**
-- Bottom sheet pattern for all panels (consistent with mobile platform conventions)
-- Peek state: 25% screen height (question/instruction visible)
-- Half state: 50% (full prediction input or explanation)
-- Full state: 90% (expanded explanation with deeper levels)
-- Drag handle always visible at top of bottom sheet
-- 3D viewport remains visible above the bottom sheet in peek/half states
-
-### 14.4 Touch vs. Mouse Adaptations
-
-| Feature | Desktop (Mouse) | Mobile (Touch) |
-|---------|-----------------|----------------|
-| Camera orbit | Right-click + drag | One-finger drag |
-| Object interaction | Left-click | Tap / Long-press |
-| Drawing mode | Click + drag on surface (automatic) | Explicit "Draw" mode toggle (avoids conflict with orbit) |
-| Hover states | Present (object glow on hover) | None (glow on tap instead) |
-| Variable sliders | Click + drag | Touch + drag (larger hit area: 56px height) |
-| Keyboard shortcuts | Available | N/A |
-| Scroll in panels | Mouse scroll | Touch scroll (momentum) |
-
-### 14.5 Performance Tiers
-
-| Tier | Device | Target FPS | Adaptations |
-|------|--------|------------|-------------|
-| High | Desktop with dedicated GPU | 60 fps | Full quality: all particles, post-processing, high-res textures |
-| Medium | Laptop / high-end mobile | 30-60 fps | Reduced particles (50%), simplified post-processing, compressed textures |
-| Low | Mid-range mobile | 30 fps | Minimal particles, no post-processing, low-res textures, simplified geometry LOD |
-
-Auto-detection: measure average frame time over first 60 frames. If <16ms = High, 16-33ms = Medium, >33ms = Low. User can override in Settings.
-
-*Principle: 3D Loading Experience -- allow interaction during loading. Mobile UX -- separate 3D interaction zones from scrollable areas. Performance adaptation -- automatically adjust quality to maintain smooth interaction.*
-
----
-
-## 15. Accessibility
-
-### 15.1 WCAG 2.1 AA Compliance (2D Layer)
-
-| Requirement | Implementation |
-|-------------|---------------|
-| Text contrast (4.5:1) | All text/background combinations verified. Dark theme uses `#E8EBF0` on `#0F1117` (14.5:1). Light theme uses `#1A1D27` on `#FAFBFD` (15.2:1) |
-| UI component contrast (3:1) | Buttons, inputs, toggles all meet 3:1 against adjacent backgrounds |
-| Focus indicator | 2px solid outline in `accent-primary`, 2px offset. Visible against both light and dark backgrounds |
-| Touch targets | 44x44px minimum for all interactive elements. 48x48px for primary actions |
-| Text resizing | Rem-based sizing. Tested at 200% browser zoom without layout breakage |
-| Keyboard navigation | All 2D pages fully keyboard-navigable. Tab order matches visual order |
-
-### 15.2 3D Viewport Accessibility
-
-3D content presents unique accessibility challenges. PhysPlay takes a layered approach:
-
-**Keyboard navigation within 3D viewport:**
-- Tab to enter the viewport. Focus ring appears around the canvas
-- Arrow keys: orbit camera (15-degree increments per press)
-- +/- keys: zoom in/out
-- Tab within viewport: cycle through interactive objects (focus ring on each object)
-- Enter: select/interact with focused object
-- Space: throw/activate (context-dependent)
-- Escape: exit viewport focus (return to HUD navigation)
-
-**Screen reader support:**
-- 3D viewport has `role="application"` with `aria-label="3D experiment viewport"`
-- On object focus: screen reader announces object name, type, and available actions ("Ball. Throwable object. Press Space to throw, or Enter to grab and drag.")
-- Phase changes announced via `aria-live="polite"`: "Now in Predict phase. Draw where you think the ball will land."
-- Simulation results announced: "Simulation complete. Your prediction was 78% accurate. The ball landed 2 meters to the right of your prediction."
-- All concept explanations are in HTML (not rendered in 3D), fully accessible
-
-**Color independence:**
-- Prediction vs. result lines differ in pattern (dashed vs. solid), not just color
-- Correct/incorrect badges use icons (checkmark/magnifying glass) plus color
-- Interactive objects use shape (glow outline + pulse animation) plus color
-- Lab-specific palettes tested with protanopia, deuteranopia, tritanopia simulators
-
-**Motion sensitivity:**
-- `prefers-reduced-motion`: all decorative animations disabled (particles, ambient motion, auto-rotation)
-- Portal transition becomes simple cross-fade
-- Simulation physics still runs (it is content, not decoration) but camera transitions become instant
-- Option in Settings to manually set "Reduced Motion" independent of system preference
-
-### 15.3 Cognitive Accessibility
-
-| Concern | Implementation |
-|---------|---------------|
-| Reading level | All UX copy at 6th-8th grade reading level (en). Korean copy uses standard 초등 vocabulary for Level 1, 고등 for Level 2-3 |
-| Consistent navigation | HUD layout is identical across all labs and stations. Only content changes |
-| Predictable behavior | Same gesture = same result everywhere. Throw mechanic works identically in every station |
-| No unexpected context changes | No auto-redirect without user action (except first-visit onboarding, which has a visible countdown) |
-| Error recovery | Every action is undoable or restartable. "Restart Challenge" always available |
-| Memory independence | All needed information shown on-screen. Users never need to remember something from a previous screen |
-
----
-
-## 16. I18n
-
-### 16.1 Supported Languages
-
-| Language | Code | Status | Direction |
-|----------|------|--------|-----------|
-| English | en | Primary | LTR |
-| Korean | ko | Primary | LTR |
-
-### 16.2 Text Considerations
-
-| Concern | Approach |
-|---------|----------|
-| Text expansion | Korean is generally more compact than English. Design for English length as the longer variant. Reserve 30% extra space in UI elements for safety |
-| Line height | Korean requires slightly more line height than English (1.6x vs 1.5x). Use 1.6x as default for both |
-| Font fallback | `Inter` (en) -> `Pretendard Variable` (ko) -> `Noto Sans KR` -> system sans-serif |
-| Number formatting | en: 1,000.00 / ko: 1,000.00 (same format) |
-| Units | en: m/s, kg, N / ko: m/s, kg, N (same scientific units, no localization needed) |
-| Date format | en: Mar 4, 2026 / ko: 2026.3.4 |
-| Button labels | Translate verbs. en: "Start Experimenting" / ko: "실험 시작하기". Keep both specific |
-| Error messages | Full translation, matching tone. en: "We couldn't load your progress." / ko: "진도를 불러올 수 없습니다." |
-| Scientific terms | Show both: "Gravity (중력)", "Parabola (포물선)". Bilingual display in concept explanations builds vocabulary |
-| HUD labels | Short translations only. en: "Predict" / ko: "예측". Max 6 characters for HUD labels |
-
-### 16.3 Dual-Language Concept Display
-
-In the Discover phase, concept explanations show both languages when helpful:
-
-```
-Concept: Gravity / 중력
-
-[en] Gravity pulls the ball downward at a constant rate,
-creating a curved path called a parabola.
-
-[ko] 중력은 공을 일정한 속도로 아래로 끌어당겨,
-포물선이라는 곡선 경로를 만듭니다.
+:focus:not(:focus-visible) {
+  outline: none;
+}
 ```
 
-The user selects their primary language in Settings. The secondary language appears as a toggle: "Show Korean / 한국어 보기" or "Show English / 영어 보기."
+#### Semantic HTML
+
+- Proper heading hierarchy: h1 (page title) -> h2 (sections) -> h3 (subsections).
+- Navigation landmarks: `<main>`, `<nav>`, `<header>`.
+- Lists use semantic `<ul>`, `<ol>`, `<li>`.
+- Form inputs have associated `<label>` elements.
+- Images have meaningful `alt` text or `alt=""` for decorative images.
+
+#### Screen Reader Support
+
+- Dynamic content updates use `aria-live="polite"` for non-urgent updates (progress changes, setting confirmations).
+- `aria-live="assertive"` for errors.
+- Interactive elements have accessible names (`aria-label` when visible text is insufficient).
+- Space cards in Hub include descriptive labels: "Mechanics Lab, 3 stations, 12 of 26 challenges completed."
+- Locked spaces: "Molecular Lab, locked. Complete Mechanics Lab to unlock."
+
+#### Color and Contrast
+
+- Text contrast: 4.5:1 minimum (3:1 for large text >= 18pt).
+- UI component contrast: 3:1 minimum against adjacent colors.
+- Color is never the sole indicator of state. All color-coded information is paired with text labels, icons, or patterns.
+- Progress bars include numeric labels (e.g., "8/10") not just color fill.
+- Settings page tested with protanopia, deuteranopia, tritanopia simulators.
+
+### 11.3 3D Lab Accessibility (Phase 1 Baseline, Phase 2 Enhancement)
+
+#### Phase 1 (Baseline)
+
+- **Reduced motion:** `prefers-reduced-motion` respected. Portal transitions become cross-fades. Auto-rotation disabled. Camera transitions become instant jumps.
+- **HUD text size:** Minimum 14px PC, 16px mobile. Scalable with browser zoom.
+- **HUD contrast:** All HUD text meets 4.5:1 contrast. HUD panel backgrounds provide sufficient contrast separation from the 3D scene.
+- **Keyboard access to HUD:** Tab through HUD elements. Arrow keys navigate between options in prediction panels. Enter submits.
+- **No flashing content:** No strobe effects, no rapid flashing (seizure risk prevention).
+
+#### Phase 2 (Enhancement)
+
+- **Keyboard navigation of 3D objects:** Arrow keys to cycle through interactive objects. Enter to select/grab. WASD for camera movement.
+- **Screen reader descriptions of 3D state:** "A ball sits on a ramp at 45 degrees. A target is 3 meters to the right." This is a text representation of the 3D scene, updated when the scene state changes.
+- **High contrast mode for HUD:** Solid backgrounds instead of translucent panels. Thicker outlines on interactive elements.
+- **Alternative text-based challenge mode:** For users who cannot interact with the 3D viewport, provide a text-based version of the prediction (dropdown menus, text input for values instead of drawing/placement).
+
+### 11.4 Cognitive Accessibility
+
+Applies to both 2D and 3D:
+
+- **Plain language:** All text at approximately 8th grade reading level. Science terms are introduced with definitions.
+- **Consistent navigation:** Same nav structure on every 2D page. Same HUD layout in every challenge.
+- **Predictable behavior:** Identical interactions produce identical results everywhere.
+- **No auto-advancing content:** Users control when to proceed to the next challenge. No timers forcing decisions (exception: challenges with time-based physics, where the timer is part of the experiment, not the UI).
+- **Error recovery:** All actions in the core loop are recoverable. Wrong predictions lead to discovery. Failed experiments can be replayed.
 
 ---
 
-## 17. Phase Implementation Summary
+## 12. Motion & Transitions
 
-### Phase 1 (역학 실험실 -- Mechanics Lab)
+### 12.1 Motion Principles
+
+1. **Motion communicates, it does not decorate.** Every animation serves a purpose: indicate progress, show cause-and-effect, orient the user, or celebrate achievement. If removing the animation loses no information, remove the animation.
+
+2. **Physics-based motion in the 3D lab, ease-based motion in 2D UI.** The 3D environment follows real physics (trajectories, bounces, waves). HUD animations follow standard UI easing.
+
+3. **All motion respects `prefers-reduced-motion`.** When enabled: replace animations with instant state changes, replace portal transitions with cross-fades, disable auto-rotation and particle effects.
+
+### 12.2 Transition Inventory
+
+#### Page Transitions (2D)
+
+| Transition | Animation | Duration | Easing |
+|------------|-----------|----------|--------|
+| Page to page (Hub -> Progress) | Cross-fade | 200ms | ease-in-out |
+| Landing -> first challenge (portal) | Expand + tunnel + materialize | 800-1200ms | ease-out for expand, custom for tunnel |
+| Hub -> Lab (portal) | Card expand + tunnel + 3D materialize | 800-1200ms | ease-out |
+| Lab -> Hub (portal reverse) | 3D contract + tunnel reverse + page materialize | 600-800ms | ease-in for contract, ease-out for page |
+
+#### HUD Transitions (3D)
+
+| Transition | Animation | Duration | Easing |
+|------------|-----------|----------|--------|
+| Phase: Predict -> Play | Prediction panel slides out right, fade | 300ms | ease-in |
+| Phase: Play -> Discover | Explanation panel slides in from right | 300ms | ease-out |
+| Phase: Discover -> Predict (next challenge) | Cross-fade of HUD content | 200ms | ease-in-out |
+| Station switch | Camera glide + environment parameter blend | 500ms | ease-in-out |
+| HUD element appear | Fade in + 8px slide from edge | 200ms | ease-out |
+| HUD element dismiss | Fade out + 8px slide to edge | 150ms | ease-in |
+
+#### 3D Scene Transitions
+
+| Transition | Animation | Duration | Easing |
+|------------|-----------|----------|--------|
+| Challenge setup (new objects appear) | Objects scale from 0 + slight bounce | 400ms | spring (0.5 damping) |
+| Simulation start | Objects affected by physics | Real-time | Physics engine |
+| Comparison overlay appear | Predicted trajectory fades in over 300ms | 300ms | ease-out |
+| Camera reset | Smooth interpolation to default position | 500ms | ease-in-out |
+
+#### Feedback Animations
+
+| Trigger | Animation | Duration |
+|---------|-----------|----------|
+| Prediction submitted | Subtle pulse on submitted element + checkmark | 300ms |
+| Challenge correct | Brief particle burst + "Nice prediction!" text animation | 500ms |
+| Challenge incorrect (not shown as error) | Gentle comparison reveal + "Interesting!" text | 300ms |
+| Station complete | Larger celebration effect + progress bar fill animation | 800ms |
+| Space unlocked [Phase 2+] | Dramatic reveal: silhouette fills with color + portal opens | 1200ms |
+
+### 12.3 Reduced Motion Fallback
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  /* All transitions become instant */
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Portal transition becomes cross-fade (handled in JS) */
+  /* Camera transitions become instant position change */
+  /* Particle effects disabled */
+  /* Auto-rotation disabled */
+  /* Simulation physics still runs normally (it's content, not decoration) */
+}
+```
+
+---
+
+## 13. State & Error Handling
+
+### 13.1 Loading States
+
+#### 3D Scene Loading (Most Critical)
+
+Users must never see a blank screen while 3D assets load.
+
+**Loading hierarchy (per 3D Design reference):**
+
+```
+1. Instant (0ms):
+   Container visible. Portal transition animation plays.
+
+2. Quick preview (0-2s):
+   Low-resolution environment visible (skybox + ground plane).
+   Poster image or low-poly silhouette of experiment setup.
+
+3. Progressive (2-5s):
+   Base geometry loaded. User can orbit camera.
+   Textures and materials stream in progressively.
+
+4. Full quality (5s+):
+   High-resolution textures replace low-res.
+   Physics engine initialized. Challenge ready.
+```
+
+**Rule:** Allow camera orbit as soon as the low-poly scene is visible (< 2s). Never block interaction with a loading overlay.
+
+**Progress indicator during load:**
+
+```
++-------------------------------------------------------+
+|                                                       |
+|  [Low-poly 3D environment visible]                    |
+|                                                       |
+|                                                       |
+|           Preparing your experiment...                |
+|           [===========----------]  65%                |
+|                                                       |
++-------------------------------------------------------+
+```
+
+#### 2D Page Loading
+
+- Page shell renders instantly via SSR (landing page) or client-side routing.
+- Data-dependent content (progress numbers, space unlock states) shows skeleton shimmer until loaded.
+- Expected load time: < 300ms for local data. No spinner needed -- skeleton suffices.
+
+### 13.2 Error States
+
+#### Simulation Engine Error
+
+The physics engine or renderer encounters an unrecoverable error.
+
+```
++-------------------------------------------------------+
+|                                                       |
+|  [3D scene frozen or partially rendered]              |
+|                                                       |
+|  +----------------------------------------------+    |
+|  |  Something went wrong with the simulation.    |    |
+|  |                                               |    |
+|  |  [Try Again]        [Back to Hub]             |    |
+|  +----------------------------------------------+    |
+|                                                       |
++-------------------------------------------------------+
+```
+
+- **Tone:** Calm, not alarming. "Something went wrong with the simulation." (not "Error 500" or "Fatal exception").
+- **Actions:** "Try Again" reloads the current challenge. "Back to Hub" exits to safe ground.
+- **Telemetry:** Automatic Sentry error report with engine state snapshot.
+
+#### WebGPU/WebGL Fallback
+
+If WebGPU is unavailable:
+- Silently fall back to WebGL. No user-visible message (user does not care about the rendering backend).
+- If WebGL also fails: show a clear message on the landing page: "PhysPlay needs a modern browser with 3D support. Try the latest Chrome, Firefox, or Safari." with links to supported browsers.
+
+#### Storage Error
+
+If local storage (OPFS/IndexedDB) is unavailable:
+- First-visit: works normally (nothing to persist yet). Show a non-blocking banner: "Progress may not be saved in private browsing mode."
+- Returning visit: fall through to first-visit behavior. Previous progress is lost. Show: "We could not find your saved progress. This can happen in private browsing or if browser data was cleared."
+- Never block the experience. Storage is a convenience, not a prerequisite.
+
+#### Network Error
+
+- Phase 1 works entirely offline after initial load. Network errors only affect:
+  - Analytics (PostHog): silent failure, events queued.
+  - Error tracking (Sentry): silent failure.
+  - Initial asset loading: show retry option if CDN assets fail to load.
+
+### 13.3 Empty States
+
+| Location | When | Content | CTA |
+|----------|------|---------|-----|
+| Hub (first visit) | After onboarding challenge | "Your research lab is ready. Pick a station to begin." | Station chips highlighted |
+| Progress (no challenges done) | User navigates to /progress before completing any challenge | "Start experimenting to see your progress here." | [Go to Hub] |
+| Station (all challenges complete) | User completed all challenges in a station | "You've explored every challenge in this station. Try a different one, or come back later for new experiments." | [Other Stations] |
+
+Empty states follow the formula: what this place is + why it is empty + what to do next.
+
+### 13.4 Offline Behavior
+
+Phase 1 is designed to work offline after initial load:
+
+| Feature | Online | Offline |
+|---------|--------|---------|
+| Simulation | Works | Works (WASM runs locally) |
+| Challenge data | Loaded from bundle | Available (bundled with app) |
+| Progress saving | Saves to local storage | Saves to local storage (same) |
+| Analytics | Sent to PostHog | Queued, sent on reconnect |
+| Asset loading (textures, models) | Fetched from CDN | Must be cached from previous session |
+
+If the user goes offline before 3D assets are cached, show: "Some experiment visuals could not load. Reconnect to download them." The simulation can still run with lower-fidelity fallback models.
+
+---
+
+## 14. i18n UX
+
+### 14.1 Supported Languages (Phase 1)
+
+- English (en) -- default
+- Korean (ko)
+
+### 14.2 Language Selection
+
+- **First visit:** Browser language auto-detected. If `navigator.language` starts with "ko," default to Korean. Otherwise, English.
+- **Manual switch:** Language toggle in top-right of Landing page and in Settings page. Segmented control: [English] [Korean].
+- **Persistence:** Saved in local storage. Applied immediately on selection (no page reload).
+
+### 14.3 Text Expansion Rules
+
+Korean and English have different text lengths and character widths:
+
+| Content Type | en Length | ko Length | Expansion Factor |
+|-------------|----------|----------|-----------------|
+| Button labels | Baseline | ~0.8-1.2x | Generally similar or shorter in Korean |
+| Headings | Baseline | ~0.7-1.0x | Korean is often more compact |
+| Body text | Baseline | ~0.8-1.1x | Variable |
+| Error messages | Baseline | ~0.9-1.2x | Can be slightly longer |
+
+**Design rules:**
+- No fixed-width text containers that might truncate. Use flexible layouts that adapt to content length.
+- Buttons have minimum padding (16px horizontal) but grow with text.
+- HUD labels have max-width with ellipsis as a last resort (test both languages to ensure no truncation).
+- Test all screens in both languages before shipping.
+
+### 14.4 Layout Considerations
+
+Both English and Korean read left-to-right, so there are no RTL layout concerns.
+
+**Typography:**
+- English: system font stack (Inter or similar clean sans-serif).
+- Korean: system font stack with Korean-optimized fallback (Pretendard, Noto Sans KR, or system default).
+- Line height: 1.5-1.6x for Korean (slightly taller than English) because Korean characters are more visually dense.
+
+**Science terms:**
+- Proper nouns and formula symbols (F, m, g, Hz) are not translated.
+- Science concept names are displayed in the user's language with the English term in parentheses on first use: "도플러 효과 (Doppler Effect)."
+- This helps Korean users who may encounter English-only resources later.
+
+### 14.5 3D Scene Text
+
+- Text rendered in the 3D scene (labels on objects, measurement values) uses the same i18n system.
+- 3D text must use SDF (Signed Distance Field) fonts for crisp rendering at all viewing angles and distances.
+- Font loading: pre-load both language fonts during initial asset loading to prevent layout shifts on language switch.
+
+---
+
+## 15. Dark / Light Theme
+
+### 15.1 Theme Options
+
+Three-option theme selector in Settings:
+
+| Option | Behavior |
+|--------|----------|
+| System | Follows OS preference (`prefers-color-scheme`). Auto-switches when OS theme changes. Default. |
+| Light | Always light. |
+| Dark | Always dark. |
+
+### 15.2 2D Pages Theme Handling
+
+Standard light/dark theming with CSS custom properties:
+
+| Token | Light | Dark |
+|-------|-------|------|
+| --bg-primary | #FFFFFF | #1A1A2E |
+| --bg-secondary | #F5F5F7 | #16213E |
+| --text-primary | #1A1A2E | #F5F5F7 |
+| --text-secondary | #6B7280 | #9CA3AF |
+| --accent | #4F46E5 | #818CF8 |
+| --surface | #FFFFFF | #1E293B |
+| --border | #E5E7EB | #334155 |
+| --error | #DC2626 | #F87171 |
+| --success | #16A34A | #4ADE80 |
+
+Contrast ratios verified for both themes against WCAG 2.1 AA.
+
+### 15.3 3D Lab Theme Handling
+
+The 3D environment has its own visual theming that is separate from the 2D theme:
+
+- **Space themes** (skybox, lighting, ambient color) are defined per space (REQ-029). These do not change with light/dark mode. The Mechanics Lab always looks like a Mechanics Lab.
+- **HUD panels in 3D** adapt to the user's theme:
+  - Light theme: white/translucent panels with dark text.
+  - Dark theme: dark/translucent panels with light text.
+- **HUD panel transparency:** Must maintain readable contrast against varied 3D backgrounds. Use a stronger backdrop-blur and slightly higher opacity in the 3D context than typical glass-morphism.
+
+**Testing rule:** Verify HUD readability against the lightest and darkest areas of each space's environment. If a space has very bright areas (e.g., Space Observatory skybox), ensure dark-theme HUD text is still readable against it (increase panel opacity or add text shadow as needed).
+
+### 15.4 Theme Transition
+
+Theme changes apply instantly. No animation on theme switch (avoids the jarring "flash of wrong theme" on page load).
+
+**Implementation note:** Theme preference is stored in local storage and applied before first paint (in the `<head>` script) to prevent flash of incorrect theme.
+
+---
+
+## 16. Phase Implementation Summary
+
+### Phase 1 (Launch)
 
 **Screens:**
-- S01: Landing Page
-- S02: Research Hub (1 lab unlocked, 3 locked silhouettes)
-- S03: Settings
-- S04: Progress Detail
-- H01-H07: All HUD states for Mechanics Lab
-- H09: Pause/Exit Overlay
+- Landing Page (first visit entry + returning redirect)
+- Research Lab Hub (space/station selection)
+- Progress Page (learning progress dashboard)
+- Settings Page (language, theme, audio, discover depth)
+- 3D Lab Experience (full-screen viewport + HUD)
 
-**Key flows:**
-- First visit onboarding (30-second loop)
-- Returning user Hub -> Mechanics Lab
-- Core loop (Predict -> Play -> Discover) for all 3 stations
-- Station switching within Mechanics Lab
-- Variable adjustment and replay
+**Flows:**
+- First Visit: Landing -> instant challenge -> Hub reveal
+- Returning User: Hub -> station selection -> Portal Transition -> 3D Lab -> core loop
+- Station Navigation: within 3D Lab via HUD
+- Settings: standard 2D page
 
-**3D content:**
-- Mechanics Lab environment (Industrial Workshop Playground)
-- 3 stations: Projectile, Energy, Wave
-- God Hand interactions: throw/launch, assemble/build, push/pull, place/install
-- 26 challenges across 3 engines
-- Portal transition (2D -> 3D and reverse)
+**Core Loop:**
+- All 4 prediction types (trajectory, binary, pattern, placement)
+- God Hand interactions (PC mouse/keyboard primary, mobile touch secondary)
+- Discover phase with Level 1 + Level 2 depth (Level 3 opt-in)
+- Adaptive challenge selection (rule-based engine)
 
-### Phase 2 (역학 확장 + AI)
+**Content:**
+- Mechanics Lab only (1 space, 3 stations, 26 challenges)
+- Other spaces visible as locked silhouettes in Hub
 
-**New screens:**
-- Additional stations added to Mechanics Lab HUD rail
+**i18n:** en/ko
+**Theme:** Light/Dark/System
+**Accessibility:** WCAG 2.1 AA for 2D pages. Baseline 3D accessibility (reduced motion, HUD contrast).
+**Performance:** 60fps PC, 30fps mobile, 3s initial load.
 
-**Flow changes:**
-- AI-based adaptive engine replaces rule-based (same UX, better recommendations)
-- XR mode activation (same scene, input switches to hand tracking)
+### Phase 2
 
-### Phase 3 (분자 실험실 -- Molecular Lab)
+**New:**
+- XR hand tracking mode (God Hand maps to real hands)
+- 3D accessibility enhancements (keyboard 3D navigation, screen reader descriptions)
+- Mechanics Lab expansion (Sound/Light, Electromagnetic stations)
+- ML-based adaptive engine (replaces rule-based)
+- Enhanced portal transitions and space unlock celebrations
 
-**New screens:**
-- S05: Account (profile, sync)
-- S06: Challenge Editor
-- H08: Cross-Engine Suggestion card in Discover phase
+**Flow Changes:**
+- XR mode toggle in Settings
+- In-lab XR mode entry (same scene, input changes to hand tracking)
 
-**New 3D content:**
-- Molecular Lab environment (Neon Bio-Laboratory)
-- Molecular stations and challenges
-- New God Hand patterns: rotate, scale-switch
+### Phase 3+
 
-**Flow changes:**
-- Cross-engine discovery flow activates (Mechanics <-> Molecular)
-- Hub shows 2 unlocked labs, 2 locked
-- Account creation and cloud sync available
+**New Screens:**
+- Molecular Lab (new space, Phase 3)
+- Space Observatory (new space, Phase 4)
+- Quantum Lab (new space, Phase 5)
+- User account system (login, sync progress across devices, Phase 3)
+- Challenge Editor (UGC, Phase 3)
+- Shared challenge viewer (social links, Phase 3)
 
-### Phase 4 (우주 관측소 -- Space Observatory)
+**New Flows:**
+- Cross-engine discovery recommendations (Discover phase links to related concepts in other spaces)
+- Account creation and progress sync
+- Challenge sharing via URL
+- UGC: create -> preview -> share
 
-**New screens:**
-- S07: Station Editor
-
-**New 3D content:**
-- Space Observatory environment (Cosmic Observation Deck)
-- Orbital stations and challenges
-- New God Hand patterns: time manipulation, launch with velocity vector
-
-**Flow changes:**
-- 3-way cross-engine discovery
-- Hub shows 3 unlocked, 1 locked (Quantum Lab as the final frontier)
-
-### Phase 5 (양자 연구소 -- Quantum Lab)
-
-**New screens:**
-- S08: Space Editor
-
-**New 3D content:**
-- Quantum Lab environment (Probability Dreamscape)
-- Quantum stations and challenges
-- New God Hand patterns: toggle (observer ON/OFF), measure (collapse wave function)
-
-**Flow changes:**
-- Full cross-engine discovery across all 4 labs
-- All labs unlocked on Hub
-- UGC editing flows fully available
+**IA Changes:**
+- Hub grows from 1 unlocked space to 4 as phases ship
+- Station count per space increases with vertical expansion
+- Search may become relevant when content exceeds ~100 challenges (Phase 4+)
 
 ---
 
-## Design Rationale Summary
+## Appendix A: Design Rationale Summary
 
-### Key Decisions
+| Decision | Principle | Reference |
+|----------|-----------|-----------|
+| No sign-up, instant first challenge | Doherty Threshold, Peak-End Rule | cognitive-principles.md |
+| One action per screen/HUD state | Cognitive Load Theory, Von Restorff Effect | cognitive-principles.md |
+| Full-screen 3D with minimal HUD | Von Restorff (simulation is focus), REQ-015 | 3d-design.md |
+| Wrong predictions framed as discovery | Aesthetic-Usability (emotional safety), Zeigarnik Effect | cognitive-principles.md |
+| Locked spaces visible in Hub | Goal Gradient Effect, Serial Position Effect | cognitive-principles.md |
+| Top nav for 2D, HUD for 3D | Jakob's Law (web conventions), REQ-015/016 | information-architecture.md |
+| Portal transition between 2D and 3D | Mode change signaling, REQ-040 | interaction-patterns.md |
+| Progressive loading (poster -> low-poly -> full) | Doherty Threshold, 3D Loading reference | 3d-design.md |
+| Context-based hints, no tutorial | Show don't tell, Cognitive Load reduction | ux-writing.md, design-process.md |
+| Immediate-apply settings, no save button | Optimistic UI (>95% success, reversible) | interaction-patterns.md |
+| Right panel (PC) / bottom sheet (mobile) for explanations | Platform conventions, responsive patterns | ergonomics.md |
+| Language auto-detect + manual toggle | Reduce decisions, respect user agency | ux-writing.md |
+| Three-option theme (System/Light/Dark) | Jakob's Law (standard web pattern), smart default | ergonomics.md |
+| Skip nudge (once per session, then respect choice) | Respect user autonomy, no guilt-tripping | ux-writing.md |
+| God Hand left-click = object, right-click = camera | Object interaction priority over camera orbit in simulation context | 3d-design.md |
 
-| Decision | Rationale |
-|----------|-----------|
-| Auto-start onboarding (no signup, no tutorial) | P5 (30-Second First Loop). Doherty Threshold -- every second of delay before the first interaction loses users. The first challenge IS the tutorial |
-| Orange for incorrect, not red | P2 (The Wrong Answer Is the Product). Peak-End Rule -- red triggers failure/danger associations. Orange triggers curiosity/warmth. This is a fundamental emotional design choice |
-| HUD fades during Play phase | P4 (Get Out of the Way). Cognitive Load -- during the most interactive moment, reduce extraneous UI to let the simulation dominate |
-| Portal transition (1.2-1.5s dramatic effect) | P3 (Game Stage, Not Educational Tool). Aesthetic-Usability Effect -- the threshold crossing creates psychological separation between "browsing" and "experimenting." Jakob's Law applied to game conventions (loading screens as atmospheric transitions) |
-| Bottom sheet pattern on mobile | Jakob's Law -- standard mobile pattern. Fitts's Law -- bottom-positioned elements are in thumb zone |
-| Station rail always visible in lab | Miller's Law -- 3 stations is within 4+/-1 chunk limit. Zeigarnik Effect -- seeing other stations creates motivation. IA Principle of Focused Navigation -- separated from phase navigation |
-| Prediction is skippable but encouraged | Hick's Law -- forcing prediction adds friction. Goal Gradient -- gentle nudge leverages the user's already-invested attention. Data shows mandatory prediction will be tested via A/B (Assumption A1) |
-| Three-depth explanation system | Cognitive Load -- Level 1 is low extraneous load for beginners. Progressive Disclosure -- deeper levels available on demand for advanced learners. Serves all three personas with one system |
-| Each lab has a completely distinct visual identity | P3 (Game Stage). Von Restorff Effect -- distinctiveness makes each lab memorable. Serial Position Effect -- first lab (Mechanics) is warm and accessible, last lab (Quantum) is the most visually dramatic |
-| God Hand slingshot mechanic for throw | Jakob's Law applied to game conventions (Angry Birds slingshot is universally understood). Fitts's Law -- large drag gesture is more forgiving than small button |
+## Appendix B: Open UX Questions
 
-### What Was Removed
-
-| Removed Element | Reason |
-|-----------------|--------|
-| Feature tour / onboarding carousel | Removal Test -- the first challenge teaches everything needed. Sequential onboarding delays the core experience (P5) |
-| Achievement badges / leaderboard on Hub | Removal Test -- external rewards are not needed for Phase 1. Core loop motivation should come from prediction-discovery (intrinsic). Badges are low priority (Open Question from Product Brief) |
-| "Are you sure?" on station switch | Removal Test -- station switching auto-saves progress. No data loss. Undo pattern: user can switch back |
-| Timer on predictions | Removal Test -- time pressure contradicts "safe to be wrong" (P2). Timer would increase anxiety, not engagement |
-| Signup prompt before first challenge | Removal Test -- blocks the 30-second loop (P5). Phase 1 has no account system (REQ-062) |
-| Complex settings in HUD | Removal Test -- only essential settings (sound, graphics) in HUD. Full settings in 2D page. Reduces 3D HUD complexity (P4) |
-| Tutorial overlays teaching camera controls | Removal Test -- camera controls follow standard 3D viewport conventions (Jakob's Law / 3D design reference). Only shown if user hesitates >5s |
-
-### Open Questions for Testing
-
-- The 2-second auto-start on Landing: does it feel too aggressive? Should it be 3 seconds? Should it wait for explicit click?
-- Prediction skip rate: if >30% skip predictions in the first session, the prediction UX needs simplification
-- HUD opacity during Play phase (40%): does it become too invisible? Does the user forget the HUD exists?
-- Portal transition duration (1.2-1.5s): does it feel too long on repeat visits? Consider shortening to 0.8s for returning users
-- Binary prediction card size on mobile: are they large enough to distinguish?
-- Variable panel interaction: do users discover it organically, or does it need a hint?
-- Sound: should it be off by default (web convention) or on (game convention)?
+- [ ] Optimal error tolerance for trajectory drawing predictions by difficulty level?
+- [ ] HUD panel opacity values that work across all space environments in both themes?
+- [ ] Ideal portal transition duration (current: 0.8-1.2s) -- too fast loses drama, too slow feels sluggish?
+- [ ] God Hand macro-micro scale transition UX when switching between tabletop and atomic-scale views [Phase 3+]?
+- [ ] Wave pattern selection: how many options per difficulty level before Hick's Law becomes an issue?
+- [ ] Station completion celebration: how dramatic before it becomes annoying on repeat?
+- [ ] Audio volume balance between BGM, ambient, and sound effects in 3D lab? User control granularity?
+- [ ] Should the Hub show "Continue" to jump straight into the last active challenge, bypassing station selection?
+- [ ] Mobile God Hand: is single-finger drag for throwing reliable enough, or does it conflict with camera orbit too often?
+- [ ] Cross-engine recommendations [Phase 3+]: inline in Discover phase or separate "Related Concepts" section?

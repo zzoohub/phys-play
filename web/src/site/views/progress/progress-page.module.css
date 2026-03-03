@@ -1,0 +1,325 @@
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-badge);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+
+.backBtn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.headerTitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Content ---- */
+
+.content {
+  flex: 1;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 28px 60px;
+}
+
+/* ---- Overview ---- */
+
+.overview {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 40px;
+  padding: 24px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+}
+
+.overviewStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.overviewValue {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.overviewLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ---- Lab section ---- */
+
+.labSection {
+  margin-bottom: 32px;
+}
+
+.labHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.labDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.labName {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---- Station row ---- */
+
+.stationList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.station {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+}
+
+.stationInfo {
+  min-width: 140px;
+}
+
+.stationName {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.stationMeta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.stationProgress {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent-primary);
+  transition: width 600ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.progressPct {
+  min-width: 36px;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.stationAccuracy {
+  min-width: 80px;
+  text-align: right;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ---- Concept mastery ---- */
+
+.conceptSection {
+  margin-top: 40px;
+}
+
+.conceptTitle {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+}
+
+.conceptList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.concept {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-button);
+  background: var(--surface-card);
+}
+
+.conceptName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.conceptLevel {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-badge);
+}
+
+.conceptLevel[data-level='strong'] {
+  background: color-mix(in srgb, var(--correct) 15%, transparent);
+  color: var(--correct);
+}
+
+.conceptLevel[data-level='growing'] {
+  background: color-mix(in srgb, var(--accent-warning) 15%, transparent);
+  color: var(--accent-warning);
+}
+
+.conceptLevel[data-level='new'] {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.conceptPct {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ---- Empty state ---- */
+
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.emptyBtn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--accent-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms, box-shadow 150ms;
+}
+
+.emptyBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+/* ---- Reduced motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill {
+    transition: none;
+  }
+}
+
+/* ---- Mobile ---- */
+
+@media (max-width: 640px) {
+  .header {
+    padding: 16px 20px;
+  }
+
+  .content {
+    padding: 24px 20px 40px;
+  }
+
+  .overview {
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .station {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .stationInfo {
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .stationAccuracy {
+    text-align: left;
+    min-width: 0;
+  }
+}
