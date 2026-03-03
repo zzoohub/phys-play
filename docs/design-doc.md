@@ -33,18 +33,17 @@ Phase 1 ships the Mechanics Lab (3 stations, 26 challenges) as a client-only web
                        │
             ┌──────────┼──────────┐
             │          │          │
-     ┌──────┴───┐ ┌────┴────┐ ┌──┴───────────┐
-     │ Analytics│ │ External│ │ CDN / Static │
-     │ Service  │ │ Form    │ │ Hosting      │
-     │(Plausible│ │(Tally/  │ │(Vercel/CF    │
-     │ /Umami)  │ │ GForms) │ │ Pages)       │
-     └──────────┘ └─────────┘ └──────────────┘
+     ┌──────┴───┐     │    ┌──┴───────────┐
+     │ Analytics│     │    │ CDN / Static │
+     │ Service  │     │    │ Hosting      │
+     │(PostHog) │     │    │(Vercel/CF    │
+     └──────────┘     │    │ Pages)       │
+                      │    └──────────────┘
 ```
 
 **Actors:**
 - **Students (B2C):** Primary users. Access via URL, no account required. Run challenges, build local progress.
-- **Teachers (B2B prospect):** Submit email via landing page form. No in-app functionality in Phase 1.
-- **External services:** Analytics (Plausible/Umami), form collection (Tally/Google Forms), static hosting.
+- **External services:** Analytics (PostHog), static hosting (Vercel).
 
 **Phase evolution:**
 - **Phase 1:** Pure client-side SPA. No backend. SQLite WASM + OPFS for persistence.
@@ -172,11 +171,11 @@ Next.js over TanStack Start because:
 └──────────────────────────────────────────────────────────────┘
 
 External:
-  ┌──────────┐  ┌──────────┐  ┌───────────┐
-  │  Vercel  │  │ Plausible│  │ Tally/    │
-  │  CDN +   │  │ /Umami   │  │ Google    │
-  │  Edge    │  │ Analytics│  │ Forms     │
-  └──────────┘  └──────────┘  └───────────┘
+  ┌──────────┐  ┌──────────┐
+  │  Vercel  │  │ PostHog  │
+  │  CDN +   │  │ Analytics│
+  │  Edge    │  │          │
+  └──────────┘  └──────────┘
 ```
 
 **Container responsibilities:**
@@ -282,7 +281,7 @@ site/hub (2D React) user clicks station
 **Why SQLite WASM + OPFS (SAHPool VFS):**
 - **SQL queries** — adaptive engine aggregation (tag accuracy JOIN, GROUP BY) is natural SQL instead of imperative IndexedDB cursor iteration
 - **Phase 3 migration** — client SQLite schema maps directly to server PostgreSQL. Queries are portable with minimal changes. IndexedDB → PostgreSQL would require a complete data access rewrite.
-- **SAHPool VFS** — uses OPFS `createSyncAccessHandle()` in a dedicated Worker. **No SharedArrayBuffer required**, therefore **no COOP/COEP headers needed**. This avoids cross-origin resource restrictions that would complicate Three.js asset loading (glTF, KTX2, fonts, analytics scripts).
+- **SAHPool VFS** — uses OPFS `createSyncAccessHandle()` in a dedicated Worker. **No SharedArrayBuffer required**, therefore **no COOP/COEP headers needed**. This avoids cross-origin resource restrictions that would complicate Three.js asset loading (glTF, KTX2, fonts, PostHog SDK).
 - **Single-tab constraint is acceptable** — SAHPool VFS allows only one tab to open the DB at a time. PhysPlay is a 3D simulation game; users don't multi-tab it. If a second tab attempts to open, show a "already open in another tab" message.
 - **Browser support** — OPFS with `createSyncAccessHandle()` is supported in Chrome 102+, Safari 15.2+, Firefox 111+. As of 2026, this covers all target browsers.
 
@@ -410,11 +409,11 @@ Phase 1 has no authentication. No user identity exists — all data is anonymous
 
 | Provider | Role | Phase |
 |----------|------|-------|
-| **Plausible** (primary) | Page views, UTM tracking, basic funnels. Privacy-friendly (no cookies, GDPR-compliant). Lightweight script (~1KB) | Phase 1 |
-| **Custom event layer** | Core loop events (predict_submit, play_complete, discover_view, etc.) dispatched to SQLite event log + Plausible custom events | Phase 1 |
-| **PostHog** | Full product analytics (funnels, session replay, feature flags) when user base warrants it | Phase 2+ |
+| **PostHog** (primary) | Page views, UTM tracking, custom events, basic funnels. 2D screens (landing, hub) tracking only for Phase 1 | Phase 1 |
+| **Custom event layer** | Core loop events (predict_submit, play_complete, discover_view, etc.) dispatched to SQLite event log + PostHog custom events | Phase 1 |
+| **PostHog** (expanded) | Session replay, feature flags, complex funnels when user base warrants it | Phase 2+ |
 
-**Why Plausible over PostHog for Phase 1:** Plausible is ~1KB script vs PostHog's ~30KB+. For a 3D app where every KB matters for load time, Plausible provides sufficient analytics (page views, custom events, UTM) without the weight. PostHog is introduced when we need session replay and complex funnels.
+**Phase 1 PostHog scope:** Track 2D screens (landing page, hub) and core loop funnel events only. Session replay and feature flags are disabled in Phase 1 to minimize performance impact on the 3D experience. PostHog JS SDK is lazy-loaded and excluded from the critical rendering path.
 
 **Error tracking:**
 - **Sentry** with source maps. Captures JavaScript errors, unhandled promise rejections, WebGPU/WebGL initialization failures.
@@ -464,9 +463,9 @@ Visual quality differences in WebGL mode:
 
 - **XSS:** React's JSX escaping handles most vectors. CSP headers via Vercel config: `script-src 'self'`, `style-src 'self' 'unsafe-inline'` (required by Three.js).
 - **Supply chain:** Lock file (`pnpm-lock.yaml`), Dependabot for dependency updates, `npm audit` in CI.
-- **Data exposure:** SQLite/OPFS data is local-only and contains no PII (no names, emails, or identifiers beyond a random UUID). Teacher email collection happens via external form service (Tally) — PhysPlay never handles email data directly.
+- **Data exposure:** SQLite/OPFS data is local-only and contains no PII (no names, emails, or identifiers beyond a random UUID).
 - **WASM integrity:** Rapier WASM binary is bundled and served from same origin with SRI hash.
-- **Content Security Policy:** Strict CSP preventing inline scripts, limiting asset origins to `self` and analytics domains.
+- **Content Security Policy:** Strict CSP preventing inline scripts, limiting asset origins to `self` and PostHog domain.
 
 ### 6.5 Performance & Scalability
 
@@ -507,28 +506,22 @@ Visual quality differences in WebGL mode:
 
 ## 7. Integration Points
 
-### 7.1 Analytics Service (Plausible) [Phase 1]
+### 7.1 Analytics Service (PostHog) [Phase 1]
 
-- **Provides:** Page view tracking, custom event tracking, UTM campaign attribution
-- **Protocol:** Lightweight JS script (~1KB), `POST` events to Plausible Cloud (or self-hosted instance)
+- **Provides:** Page view tracking, custom event tracking, UTM campaign attribution, basic funnels
+- **Protocol:** PostHog JS SDK, lazy-loaded. `POST` events to PostHog Cloud
 - **Failure mode:** Events silently dropped. No impact on user experience. Ad-blockers may block — accept this limitation for Phase 1.
 - **Fallback:** SQLite event log captures all events locally. Can be batch-exported for analysis.
+- **Phase 1 config:** Session replay OFF, feature flags OFF, autocapture OFF (custom events only). Minimizes SDK overhead.
 
-### 7.2 External Form Service (Tally/Google Forms) [Phase 1]
-
-- **Provides:** Teacher email collection with school/subject/grade fields
-- **Protocol:** Embedded form or `POST` to external endpoint
-- **Failure mode:** Form submission fails → show error message with mailto fallback
-- **SLA dependency:** Low. Feature is supplementary to core experience.
-
-### 7.3 NASA Open API [Phase 4]
+### 7.2 NASA Open API [Phase 4]
 
 - **Provides:** Real planetary/orbital data for Space Observatory
 - **Protocol:** REST API, API key required (free tier)
 - **Failure mode:** Cache last-known data. Observatory challenges work with bundled default data.
 - **Phase 1 impact:** None. Architecture note only.
 
-### 7.4 PDB / PubChem [Phase 3]
+### 7.3 PDB / PubChem [Phase 3]
 
 - **Provides:** Real molecular structure data for Molecular Lab
 - **Protocol:** REST API, free access
@@ -562,7 +555,7 @@ Phase 3: SQLite (OPFS) ←→ Worker ←→ App ←→ API Server ←→ Postgre
 **Architecture preparation (Phase 1):**
 - All SQLite access goes through `domains/progress/` → Worker message layer — single module to add server sync later
 - Data schemas include `id`, `timestamp`, `version` fields for conflict resolution
-- Analytics event schema is provider-agnostic (adapter pattern) — swapping Plausible for PostHog requires only a new adapter
+- Analytics event schema is provider-agnostic (adapter pattern) — swapping PostHog for another provider requires only a new adapter
 
 ### 8.2 Phase 1 → Phase 2 Migration (3D → 3D+XR)
 
@@ -607,7 +600,7 @@ Phase 2: Mouse/Touch → InputAdapter → God Hand actions
 
 5. **i18n for challenge content:** Challenge `predict.question` and `discover.level1/2/3` fields contain educational text. Options: (A) Inline i18n keys in JSON, resolved at runtime, (B) Separate locale files per challenge, (C) Duplicate challenge JSON per locale.
 
-6. **Plausible vs self-hosted analytics:** Plausible Cloud is simple but costs ~$9/month. Self-hosted Plausible is free but needs a server. Options: (A) Plausible Cloud, (B) Umami Cloud (free tier), (C) SQLite event log only with manual export.
+6. ~~**Plausible vs self-hosted analytics**~~ → Resolved: PostHog Cloud (free tier, 1M events/month) from Phase 1. No provider migration needed.
 
 ---
 
@@ -688,7 +681,7 @@ Phase 2: Mouse/Touch → InputAdapter → God Hand actions
 - **Alternatives Considered:**
   - *IndexedDB + Dexie.js:* Thin wrapper (~8KB gzip), broad browser support. Rejected because: (1) cursor-based API is verbose for aggregation queries the adaptive engine needs (tag accuracy rollups, difficulty-filtered challenge lists), (2) no schema portability to server PostgreSQL — Phase 3 migration requires complete data access rewrite, (3) unreliable in Safari private browsing.
   - *localStorage:* Simpler API but 5MB limit, no indexing, synchronous (blocks main thread). Rejected — challenge result history can grow beyond 5MB with repeated plays.
-  - *OPFS VFS (default sqlite-wasm VFS):* Supports multi-tab concurrent access. Rejected because: (1) requires SharedArrayBuffer → COOP/COEP headers mandatory, (2) COOP/COEP (`Cross-Origin-Embedder-Policy: require-corp` or `credentialless`) restricts loading of external resources (CDN fonts, analytics scripts, glTF assets), adding integration complexity with Three.js, (3) multi-tab DB access is unnecessary for a 3D simulation game.
+  - *OPFS VFS (default sqlite-wasm VFS):* Supports multi-tab concurrent access. Rejected because: (1) requires SharedArrayBuffer → COOP/COEP headers mandatory, (2) COOP/COEP (`Cross-Origin-Embedder-Policy: require-corp` or `credentialless`) restricts loading of external resources (CDN fonts, PostHog SDK, glTF assets), adding integration complexity with Three.js, (3) multi-tab DB access is unnecessary for a 3D simulation game.
   - *cr-sqlite / wa-sqlite:* Community WASM builds with additional features (CRDT sync, custom VFS). Rejected — `@sqlite.org/sqlite-wasm` is the official SQLite team package with long-term maintenance guarantee. Community builds add features not needed in Phase 1.
 - **Key design choice — SAHPool VFS:**
   - Uses OPFS `createSyncAccessHandle()` for synchronous file I/O in a Worker
@@ -698,7 +691,7 @@ Phase 2: Mouse/Touch → InputAdapter → God Hand actions
 - **Consequences:**
   - (+) SQL queries for adaptive engine aggregation (JOIN, GROUP BY, window functions)
   - (+) Schema portability: client SQLite → server PostgreSQL with minimal query changes in Phase 3
-  - (+) No COOP/COEP headers — zero impact on Three.js asset loading, CDN fonts, analytics scripts
+  - (+) No COOP/COEP headers — zero impact on Three.js asset loading, CDN fonts, PostHog SDK
   - (+) Official SQLite team package — long-term maintenance and correctness guarantees
   - (+) More reliable than IndexedDB in Safari private browsing
   - (+) Standard SQL migration tooling (version-numbered `.sql` files)
@@ -723,24 +716,24 @@ Phase 2: Mouse/Touch → InputAdapter → God Hand actions
   - (+) Generous free tier for Phase 1 traffic
   - (-) Vendor lock-in for deployment (mitigated: Next.js is portable, can deploy elsewhere)
 
-### ADR-7: Plausible for Phase 1 Analytics
+### ADR-7: PostHog for Analytics (All Phases)
 
-- **Status:** Accepted
-- **Context:** Need client-side analytics to measure Phase 1 success metrics (core loop funnel, prediction engagement, station completion). Must be lightweight (3D app already has heavy assets) and privacy-friendly (no cookies, GDPR-compliant without consent banner).
-- **Decision:** Plausible Analytics (Cloud) for page views and custom events. SQLite event log as local backup.
+- **Status:** Accepted (revised from Plausible)
+- **Context:** Need client-side analytics to measure Phase 1 success metrics (core loop funnel, prediction engagement, station completion). Want a single analytics platform that scales from Phase 1 through Phase 5+ without provider migration.
+- **Decision:** PostHog (Cloud) for all analytics from Phase 1. Phase 1 uses lightweight config: custom events only, session replay OFF, autocapture OFF, feature flags OFF. SQLite event log as local backup.
 - **Alternatives Considered:**
-  - *PostHog:* More powerful (funnels, session replay, feature flags). Rejected for Phase 1 — JS bundle ~30KB+ vs Plausible ~1KB. Session replay adds significant overhead to a 60fps 3D app. Planned for Phase 2+ when deeper analytics are needed.
+  - *Plausible:* Lightweight (~1KB script), privacy-friendly. Rejected — would require migration to PostHog in Phase 2 when funnels, session replay, and feature flags are needed. One-time SDK weight (~30KB) is acceptable with lazy loading.
   - *Google Analytics 4:* Free, powerful. Rejected — privacy concerns (GDPR consent required), heavy SDK, cookie-dependent, blocked by many ad-blockers.
-  - *Self-hosted Umami:* Free, privacy-friendly. Rejected — requires hosting a server, contradicting Phase 1's zero-backend goal.
+  - *Self-hosted Umami:* Free, privacy-friendly. Rejected — requires hosting a server, contradicting Phase 1's zero-backend goal. Limited funnel analysis.
   - *SQLite event log only:* Zero external dependency. Rejected — no real-time dashboard, manual export required. Used as supplement, not primary.
 - **Consequences:**
-  - (+) ~1KB script — negligible impact on load time
-  - (+) No cookies, GDPR-compliant without consent banner
-  - (+) Custom events API sufficient for core loop funnel tracking
+  - (+) Single analytics platform from Phase 1 through all phases — no provider migration
+  - (+) PostHog free tier (1M events/month) is sufficient for Phase 1 scale (10K UV)
+  - (+) Custom events API + basic funnels sufficient for core loop tracking
   - (+) Real-time dashboard for monitoring post-launch
-  - (-) Limited funnel analysis compared to PostHog
-  - (-) $9/month cost (acceptable for Phase 1)
-  - (-) No session replay — debugging user issues requires Sentry breadcrumbs
+  - (+) Session replay, feature flags, A/B testing available when needed (just enable)
+  - (-) ~30KB SDK (mitigated: lazy-loaded on first page interaction, not in critical path)
+  - (-) Heavier than Plausible — acceptable trade-off for avoiding future migration
 
 ### ADR-8: Rule-Based Adaptive Engine (No ML) [Phase 1]
 
@@ -810,11 +803,10 @@ Phase 1 uses no AI/LLM. The adaptive engine is rule-based (ADR-8). This section 
 
 **Infrastructure:**
 - Vercel (static hosting + CDN)
-- Plausible (analytics)
+- PostHog (analytics)
 - Sentry (error tracking)
-- Tally/Google Forms (teacher email)
 
-**Key ADRs:** 1 (client-only), 2 (Next.js), 3 (Three.js + R3F), 4 (Koota + Rapier), 5 (SQLite WASM + OPFS), 6 (Vercel), 7 (Plausible), 8 (rule engine), 9 (input abstraction)
+**Key ADRs:** 1 (client-only), 2 (Next.js), 3 (Three.js + R3F), 4 (Koota + Rapier), 5 (SQLite WASM + OPFS), 6 (Vercel), 7 (PostHog), 8 (rule engine), 9 (input abstraction)
 
 ### Phase 2 (Mechanics Expansion + AI)
 
@@ -824,7 +816,7 @@ Phase 1 uses no AI/LLM. The adaptive engine is rule-based (ADR-8). This section 
 - New stations in mechanics-lab: sound/light, electromagnetic
 
 **New infrastructure:**
-- PostHog (replacing Plausible for deeper analytics)
+- PostHog expanded: session replay ON, feature flags ON, autocapture ON
 - Service Worker for offline asset caching
 
 ### Phase 3 (Molecular Lab + Accounts)

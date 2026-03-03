@@ -186,7 +186,7 @@ URL을 열면 회원가입/트랙 선택 없이 바로 "공 던지기" 챌린지
 | 평균 세션 체류 시간 | — | 5분 이상 | Web analytics |
 | 스테이션 간 이동률 | — | 30% 이상이 2개 이상 스테이션 방문 | Web analytics |
 | **예측 정확도 향상률** | — | 동일 스테이션 내 후반부 챌린지에서 예측 정확도 20% 향상 | Event tracking |
-| B2B 교사 관심 표명 | 0 | 50명 이메일 수집 | Landing page |
+| B2B 교사 관심 표명 | 0 | 교사 5명 인터뷰 완료 (Phase 1 Discovery) | Interview records |
 | 교사/교육자 피드백 | 없음 | 10명 이상 인터뷰 완료 | Interview records |
 
 **Counter-metrics:**
