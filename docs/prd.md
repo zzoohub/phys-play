@@ -580,5 +580,5 @@ Phase 1부터 챌린지/스테이션/공간을 **코드가 아닌 데이터(JSON
 ## Appendix
 
 - [Product Brief](./product-brief.md) — 전략적 문제 정의와 방향
-- [Phase 1 PRD](./prd-phase-1.md) — Phase 1 상세 요구사항 (TBD)
+- [Phase 1 PRD](./prd-phase-1.md) — Phase 1 상세 요구사항
 - [Client Structure](./client-structure.md) — 프론트엔드 코드 구조
