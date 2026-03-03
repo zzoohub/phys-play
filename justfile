@@ -77,7 +77,7 @@ worker-lint:
 worker-clean:
     cd {{ worker_dir }} && echo "TODO: clean worker artifacts"
 
-# ─── Web (Next.js) ───────────────────────────────────────────────────────────
+# ─── Web (TanStack Start) ────────────────────────────────────────────────────
 
 web-install:
     cd {{ web_dir }} && bun install
@@ -107,7 +107,7 @@ web-test-cov:
     cd {{ web_dir }} && bun vitest run --coverage
 
 web-clean:
-    rm -rf {{ web_dir }}/.next {{ web_dir }}/coverage
+    rm -rf {{ web_dir }}/.output {{ web_dir }}/coverage
 
 # ─── Mobile (Expo React Native) ───────────────────────────────────────────
 
