@@ -1,60 +1,199 @@
-# 양자 엔진 — 챌린지 시나리오
+# 양자 엔진 — 챌린지 시나리오 v2
 
 > 소스: 4-1~4-6 전체 (Track 4 완전 매핑)
+> v2 원칙: Must 3D/XR · 게이미피케이션 핵심 · WOW Point 필수
+
+## v2 설계 철학
+
+| 원칙 | 적용 |
+|------|------|
+| Must 3D | 오비탈은 3D 확률구름. 블로흐 구는 3D 구면. 터널링은 3D 장벽. 양자는 본질적으로 3D |
+| WOW Point | "관측하면 결과가 달라진다?" — 양자역학 자체가 WOW의 보고. 직관을 완전히 파괴 |
+| God Hand | 검출기를 손으로 설치/제거, 장벽 높이를 직접 쌓기, 게이트를 큐빗에 적용 |
+| XR 증폭 | 파동함수 안에 서서 확률의 바다를 체감. 블로흐 구 내부에서 상태 벡터 회전 관찰 |
+
+---
 
 ## 시나리오 풀
 
-| # | 시나리오 | 변수 세팅 | 예측 유형 | Discover 핵심 |
-|---|----------|----------|-----------|-------------|
-| 1 | 이중슬릿 기본 | slit=2, particle=photon, observe=OFF | pattern (간섭무늬?) | 관측 안 하면 간섭무늬 |
-| 2 | 이중슬릿 관측 | slit=2, particle=photon, observe=ON | pattern | 관측하면 무늬 사라짐 |
-| 3 | 이중슬릿 전자 | slit=2, particle=electron, observe=OFF | pattern | 전자도 파동처럼 간섭 |
-| 4 | 터널링: 낮은 장벽 | barrier_height=low, barrier_width=thin | binary (투과?) | 낮고 얇으면 높은 투과 확률 |
-| 5 | 터널링: 높은 장벽 | barrier_height=high, barrier_width=thick | binary | 높고 두꺼우면 거의 투과 안 됨 |
-| 6 | 터널링: 에너지 변화 | particle_energy=variable, barrier=고정 | binary | 에너지 높을수록 투과 확률 증가 |
-| 7 | 오비탈 시각화 | n=2, l=1, m=0 | pattern (오비탈 모양) | p 오비탈의 아령 모양 |
-| 8 | 얽힘: 같은 축 측정 | entangled=true, axis=[Z, Z] | binary (상관관계?) | 100% 반상관 |
-| 9 | 얽힘: 다른 축 측정 | entangled=true, axis=[Z, X] | pattern (상관 통계) | 벨 부등식 위반 |
-| 10 | 블로흐 구 게이트 | initial=\|0⟩, gate=H | pattern (결과 상태) | 하다마드 → 중첩 상태 |
-| 11 | 양자 회로 빌더 | gates=[H, CNOT], qubits=2 | pattern (결과 확률) | 벨 상태 생성 |
+### #1 이중슬릿: 파동의 얼굴 (Double Slit — Wave Face)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 광자/전자를 이중슬릿에 한 개씩 쏘아 스크린에 쌓이는 패턴을 관찰 |
+| **Must 3D** | 간섭무늬는 3D 공간의 확률 분포. 슬릿 뒤 3D 확률파가 퍼지는 과정 시각화 |
+| **변수 세팅** | `slitCount=2`, `particleType=electron`, `observe=false`, `particleRate=slow` |
+| **예측 (pattern)** | "전자를 한 개씩 쏘면 스크린에 어떤 패턴이 생길까?" |
+| **God Hand** | 전자총의 방향을 손으로 조준. 발사 버튼을 누를 때마다 한 개씩 나간다 |
+| **WOW Point** | 한 개씩 쏘는데도 간섭무늬가 생긴다! 전자가 "자기 자신과 간섭"한다 |
+| **XR 증폭** | 슬릿 뒤에 서서 확률파가 파문처럼 퍼지는 것을 본다. 전자가 "두 경로를 동시에" 지나는 순간 |
+| **Discover 핵심** | 파동-입자 이중성, 확률파, 중첩, 자기 간섭 |
+| **난이도** | 2 |
+
+### #2 이중슬릿: 관측자 효과 (Double Slit — Observer)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | #1과 동일한 설정에 검출기를 추가. "어느 슬릿을 지나갔는지" 관측하면 어떻게 되는지 |
+| **Must 3D** | 검출기의 3D 배치에 따라 "어디까지 관측인가?"의 경계 탐험 |
+| **변수 세팅** | `slitCount=2`, `particleType=electron`, `observe=true`, `detectorPosition=slit` |
+| **예측 (pattern)** | "슬릿에 검출기를 달면 패턴이 어떻게 변할까?" |
+| **God Hand** | 검출기를 손으로 슬릿 옆에 설치/제거한다. 설치 순간 패턴이 바뀐다 |
+| **WOW Point** | 검출기를 달면 간섭무늬가 사라진다! "보는 것만으로 결과가 달라진다?!" |
+| **XR 증폭** | 검출기에서 나오는 "정보"가 빛줄기로 시각화. 관측 = 상호작용임을 체감 |
+| **Discover 핵심** | 측정 문제, 파동함수 붕괴, 상보성 원리, 관측과 교란 |
+| **난이도** | 3 |
+
+### #3 양자 터널링 런 (Quantum Tunneling Run)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 입자가 되어 에너지 장벽을 넘거나 터널링하는 것을 체험. 장벽 높이/폭 조절 |
+| **Must 3D** | 3D 에너지 지형 위에서 장벽을 시각화. 파동함수가 장벽 안에서 지수적으로 감쇠하는 것을 3D로 |
+| **변수 세팅** | `barrierHeight=2.0`, `barrierWidth=1.5`, `particleEnergy=1.0`, `showWavefunction=true` |
+| **예측 (binary)** | "이 에너지로 이 장벽을 통과할 수 있을까?" |
+| **God Hand** | 장벽의 높이를 손으로 쌓고, 두께를 조절한다. 입자를 발사! |
+| **WOW Point** | 에너지가 장벽보다 낮은데 통과한다! 고전물리에서는 불가능 — "벽을 통과하는 유령" |
+| **XR 증폭** | 입자 시점으로 장벽에 돌진. 파동함수가 지수적으로 줄어들지만 반대편에서 다시 나타나는 순간 |
+| **Discover 핵심** | 양자 터널링, 파동함수의 연속성, 지수적 감쇠, 알파붕괴/STM 응용 |
+| **난이도** | 2 |
+
+### #4 오비탈 정원 (Orbital Garden)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 양자수(n,l,m)를 조절하여 다양한 오비탈 모양을 3D로 키운다. "정원에 꽃 기르기" |
+| **Must 3D** | s/p/d/f 오비탈은 3D 확률밀도 분포. 2D 단면도로는 dxy와 dz² 구별 불가 |
+| **변수 세팅** | `quantumNumbers={n:3, l:2, m:0}`, `showProbabilityCloud=true`, `showNodeSurfaces=true` |
+| **예측 (pattern)** | "n=3, l=2, m=0이면 어떤 모양의 오비탈이 생길까?" |
+| **God Hand** | 양자수 다이얼을 돌리면 오비탈이 실시간으로 변형된다. 노드면을 손으로 자를 수 있다 |
+| **WOW Point** | 전자가 "여기에 있을 확률이 0인 면(node)"이 존재한다 — 전자가 어떻게 넘어가지? |
+| **XR 증폭** | 오비탈 확률구름 안에 서서 밀도 차이를 체감. 노드면에 서면 전자가 없는 공간 |
+| **Discover 핵심** | 양자수, 오비탈 형태, 노드, 확률밀도, 전자 구름 |
+| **난이도** | 3 |
+
+### #5 불확정성 게임 (Uncertainty Game)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 입자의 위치를 정밀하게 측정할수록 운동량이 퍼지고, 반대도 마찬가지인 것을 체험 |
+| **Must 3D** | 3D 위치 불확정성이 3D 운동량 불확정성과 트레이드오프. 파속(wave packet)의 3D 퍼짐 |
+| **변수 세팅** | `positionUncertainty=variable`, `showMomentumSpace=true`, `showWavePacket=true` |
+| **예측 (pattern)** | "위치를 더 정밀하게 측정하면 운동량 분포는 어떻게 변할까?" |
+| **God Hand** | 위치 측정 "그물"을 좁힌다 → 운동량 화살표가 사방으로 퍼진다 |
+| **WOW Point** | "정확히 알수록 더 모른다" — 우주의 근본적 한계. 실험 장치의 한계가 아닌 자연의 법칙 |
+| **XR 증폭** | 위치 공간과 운동량 공간을 양 옆에 나란히 배치. 한쪽을 조이면 다른 쪽이 퍼지는 것을 동시 관찰 |
+| **Discover 핵심** | 하이젠베르크 불확정성 원리, 파속, 위치-운동량 상보성, ΔxΔp ≥ ℏ/2 |
+| **난이도** | 4 |
+
+### #6 얽힘 게임 (Entanglement Game)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 얽힌 입자쌍을 만들고, 각각의 측정 축을 선택하여 상관관계를 확인 |
+| **Must 3D** | 측정 축은 블로흐 구의 3D 방향. 같은 축/다른 축 측정의 차이는 3D 각도 의존 |
+| **변수 세팅** | `entangled=true`, `measureAxis1=Z`, `measureAxis2=variable`, `trials=100`, `showBlochSphere=true` |
+| **예측 (pattern)** | "두 입자를 같은 축으로 측정하면? 다른 축으로 측정하면?" |
+| **God Hand** | 블로흐 구 위에서 측정 축 방향을 손으로 회전시킨다. 각 시행의 결과가 화면에 쌓인다 |
+| **WOW Point** | 같은 축 → 100% 반상관! 다른 축 → 통계적 상관. 벨 부등식 위반 = "숨은 변수"로는 설명 불가 |
+| **XR 증폭** | 두 입자 사이에 서서 "유령 같은 원격 작용"(spooky action)을 관찰. 측정 순간의 상관 |
+| **Discover 핵심** | 양자 얽힘, 벨 부등식, EPR 역설, 비국소성, 숨은 변수 이론 |
+| **난이도** | 5 |
+
+### #7 슈뢰딩거의 고양이 방 (Schrödinger's Cat Room)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 방사성 원자 → 검출기 → 독가스 → 고양이의 체인을 3D 공간에 직접 구성하고 "상자를 연다" |
+| **Must 3D** | 사고실험의 물리적 장치를 3D로 구현. 중첩 상태의 고양이를 시각화 |
+| **변수 세팅** | `decayProbability=0.5`, `timeWindow=1h`, `showSuperposition=true`, `boxState=closed` |
+| **예측 (binary)** | "상자를 열면 고양이는 살아있을까 죽어있을까?" |
+| **God Hand** | 상자 뚜껑을 손으로 연다. 여는 순간 중첩이 붕괴 |
+| **WOW Point** | "열기 전에는 둘 다이고, 여는 순간 하나가 된다" — 거시 세계에서의 양자 중첩의 부조리함 |
+| **XR 증폭** | 상자 안에 들어가서 "살아있는 고양이"와 "죽은 고양이"가 겹쳐 보이는 중첩 상태를 경험 |
+| **Discover 핵심** | 양자 중첩, 측정 문제, 결어긋남(decoherence), 거시적 양자 상태의 불가능성 |
+| **난이도** | 2 |
+
+### #8 양자 지우개 (Quantum Eraser)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 이중슬릿 + 검출기 + 지우개 — "경로 정보를 지우면 간섭무늬가 복원될까?" |
+| **Must 3D** | 검출기/지우개/스크린의 3D 배치. 지연 선택(delayed choice)의 시간축까지 시각화 |
+| **변수 세팅** | `slitCount=2`, `observe=true`, `eraser=true`, `eraserPosition=after_screen`, `showCoincidence=true` |
+| **예측 (pattern)** | "경로 정보를 기록한 후 '지우면' 간섭무늬가 돌아올까?" |
+| **God Hand** | 검출기와 지우개를 배치하고, 동시계수(coincidence) 필터를 켜고 끈다 |
+| **WOW Point** | 경로 정보를 "지우면" 간섭무늬가 부활한다! 시간 순서가 뒤바뀐 것 같은 기이함 |
+| **XR 증폭** | 타임라인을 3D로 시각화. 지연 선택의 "미래가 과거를 결정하는 듯한" 효과 |
+| **Discover 핵심** | 양자 지우개, 지연 선택 실험, 상보성, 정보와 간섭의 관계 |
+| **난이도** | 5 |
+
+### #9 양자 회로 빌더 (Quantum Circuit Builder)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 양자 게이트를 큐빗에 배치하여 목표 양자 상태를 만든다. 블로흐 구 위에서 실시간 확인 |
+| **Must 3D** | 블로흐 구는 3D 구면. 게이트는 3D 회전 연산. 2큐빗 이상은 고차원이지만 블로흐 구 시각화 |
+| **변수 세팅** | `qubits=2`, `availableGates=[H,X,Z,CNOT,T]`, `targetState=bellState`, `showBlochSphere=true` |
+| **예측 (pattern)** | "H 게이트 → CNOT 게이트를 적용하면 어떤 상태가 될까?" |
+| **God Hand** | 게이트를 손으로 잡아 큐빗 와이어에 놓는다. 블로흐 구 위에서 상태 벡터가 회전하는 것을 실시간 관찰 |
+| **WOW Point** | H + CNOT로 벨 상태(최대 얽힘 상태)가 만들어진다 — 단 2개의 게이트로 "유령 같은 연결" 생성 |
+| **XR 증폭** | 블로흐 구 안에 서서 상태 벡터가 회전하는 것을 관찰. 게이트 적용 시 "회전" 촉각 |
+| **Discover 핵심** | 양자 게이트, 블로흐 구, 벨 상태, 양자 회로, 양자 컴퓨팅 기초 |
+| **난이도** | 4 |
+
+### #10 광전효과 (Photoelectric Effect)
+
+| 항목 | 내용 |
+|------|------|
+| **컨셉** | 금속 표면에 다양한 진동수/세기의 빛을 비춰 전자 방출을 관찰 |
+| **Must 3D** | 광자가 3D 공간에서 금속 표면에 도달하여 전자를 튕겨내는 과정. 전자의 3D 방출 분포 |
+| **변수 세팅** | `lightFrequency=variable`, `lightIntensity=variable`, `metalType=sodium`, `workFunction=2.28` |
+| **예측 (binary)** | "빨간 빛의 세기를 아무리 높여도 전자가 나올까?" |
+| **God Hand** | 빛의 색상(진동수)과 밝기(세기)를 각각 손으로 조절하는 두 개의 레버 |
+| **WOW Point** | 센 빨간 빛 → 전자 0개. 약한 자외선 → 전자가 톡톡! "세기가 아니라 색깔이 중요하다니!" |
+| **XR 증폭** | 금속 표면 위에 서서 광자가 전자를 때리는 순간을 슬로모션으로 관찰. 에너지 전달의 양자화 |
+| **Discover 핵심** | 광전효과, E=hf, 일함수, 에너지 양자화, 아인슈타인의 광자 가설 |
+| **난이도** | 2 |
+
+---
 
 ## 예측 유형 분포
 
 | 유형 | 시나리오 수 | 비율 |
 |------|-----------|------|
-| pattern | 7 | 64% |
-| binary | 4 | 36% |
+| pattern | 6 | 60% |
+| binary | 4 | 40% |
+
+---
 
 ## JSON 스키마 예시
 
 ```jsonc
 {
-  "id": "quantum-double-slit-basic",
+  "id": "quantum-cat-room",
   "engineId": "quantum",
-  "version": 1,
+  "version": 2,
   "params": {
-    "slitCount": 2,
-    "particleType": "photon",
-    "observe": false
+    "decayProbability": 0.5,
+    "timeWindow": 3600,
+    "showSuperposition": true,
+    "boxState": "closed"
   },
   "predict": {
-    "type": "pattern",
-    "question": "이중슬릿을 통과한 광자가 스크린에 만드는 패턴은?",
-    "options": [
-      "두 줄 (슬릿 뒤에 각각 하나)",
-      "간섭 줄무늬 (밝고 어두운 띠 반복)",
-      "균일한 밝기"
-    ]
+    "type": "binary",
+    "question": "상자를 열면 고양이는 어떤 상태일까?",
+    "options": ["살아 있다", "죽어 있다"]
   },
   "discover": {
-    "level1": "공을 두 문으로 동시에 던질 수 있는 것처럼, 입자는 두 슬릿을 '동시에' 통과한다",
-    "level2": "양자 입자는 측정 전까지 확률파로 존재하며, 두 경로의 확률이 간섭한다",
-    "level3": "P(x) = |ψ₁(x) + ψ₂(x)|² ≠ |ψ₁|² + |ψ₂|² (간섭항 존재)",
-    "relatedConcepts": ["wave-particle-duality", "superposition", "measurement"]
+    "level1": "열기 전에는 고양이가 '살아있으면서 동시에 죽어있는' 중첩 상태!",
+    "level2": "양자 입자의 중첩이 거시 세계까지 확장되면 생기는 역설. 실제로는 결어긋남(decoherence)으로 거시적 중첩은 즉시 깨진다",
+    "level3": "밀도 행렬의 비대각 성분이 환경과의 상호작용으로 소멸 → 고전적 혼합 상태로 전이. τ_decoherence ~ 10⁻²⁶초 (고양이 크기)",
+    "relatedConcepts": ["superposition", "measurement-problem", "decoherence", "macroscopic-quantum"]
   },
   "difficulty": 2,
   "space": "quantum-lab",
   "station": "quantum",
-  "tags": ["double-slit", "interference", "observation"]
+  "tags": ["schrodinger-cat", "superposition", "measurement", "thought-experiment"]
 }
 ```
