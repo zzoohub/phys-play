@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhysPlay 3D Lab Discover Phase</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0db9f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#101e22",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .glassmorphism {
+            background: rgba(16, 30, 34, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-panel {
+            background: rgba(16, 30, 34, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen overflow-hidden">
+<div class="relative w-full h-screen bg-cover bg-center" data-alt="Dark abstract 3D futuristic space scene" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCdA5-eHO33NQnEHJREBKXlWD1OmhUbY3jYItmmIxHYcgZsFGIM1V5uszKNmiFFOMY66oRy_EmAfW-1mFZTJi8VgyjgpRm84eG8ihTzQpDoMkvOVDyAIPYqiw_alONxBDVXJL-BOE9r-ca4boNeHziXXje74mLe3iIILAJDsLq5qSluXKR4mNoneUgsiXA-Qi9JTMokCrqJ3b7lov4TMzQrffhKCCpn__YIsvpB3LIVbalaX5B8eOXCDhKy6RZMDYVoKnaTSmvvLes");'>
+<!-- 3D Viewport Overlay Effects -->
+<div class="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 pointer-events-none"></div>
+<!-- Trajectory Lines (Simulated with SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-10" preserveaspectratio="xMidYMid slice" viewbox="0 0 1920 1080">
+<!-- User Prediction (Dashed Neon Blue) -->
+<path d="M 200 900 Q 800 100 1400 900" fill="none" opacity="0.8" stroke="#0db9f2" stroke-dasharray="15 10" stroke-width="4" style="filter: drop-shadow(0 0 8px #0db9f2);"></path>
+<!-- Actual Physics (Solid Gold/Orange) -->
+<path d="M 200 900 Q 900 200 1600 900" fill="none" opacity="0.9" stroke="#f59e0b" stroke-width="6" style="filter: drop-shadow(0 0 10px #f59e0b);"></path>
+<!-- Launch Pad & Target -->
+<circle cx="200" cy="900" fill="#fff" r="12"></circle>
+<circle cx="1600" cy="900" fill="#f59e0b" r="15" style="filter: drop-shadow(0 0 15px #f59e0b);"></circle>
+<circle cx="1400" cy="900" fill="none" r="15" stroke="#0db9f2" stroke-dasharray="4 4" stroke-width="4"></circle>
+</svg>
+<!-- Top Navigation Bar -->
+<header class="absolute top-0 w-full z-40 glassmorphism">
+<div class="flex items-center justify-between px-8 py-4">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">science</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight">PhysPlay</h2>
+</div>
+<h1 class="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-center tracking-wide drop-shadow-md">
+                    Interesting! Let's see what happened...
+                </h1>
+<div class="flex items-center gap-6">
+<a class="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-lg">close</span> Exit
+                    </a>
+<div class="flex gap-3">
+<div class="flex items-center justify-center rounded-full h-10 px-5 bg-primary text-background-dark text-sm font-bold shadow-[0_0_15px_rgba(13,185,242,0.4)]">
+                            Projectile 8/10
+                        </div>
+<button class="flex items-center justify-center rounded-full w-10 h-10 bg-white/10 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-xl">settings</span>
+</button>
+<button class="flex items-center justify-center rounded-full w-10 h-10 bg-white/10 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-xl">help</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="relative z-30 flex h-full pt-20 pb-24">
+<!-- Left Controls / Tools (Optional, but adds to the 3D lab feel) -->
+<div class="flex flex-col justify-center px-8 gap-4 pointer-events-none">
+<div class="flex flex-col gap-2 pointer-events-auto">
+<button class="w-12 h-12 rounded-full bg-background-dark/80 backdrop-blur border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all group">
+<span class="material-symbols-outlined text-white group-hover:text-primary">360</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-background-dark/80 backdrop-blur border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all group">
+<span class="material-symbols-outlined text-white group-hover:text-primary">zoom_in</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-background-dark/80 backdrop-blur border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all group">
+<span class="material-symbols-outlined text-white group-hover:text-primary">zoom_out</span>
+</button>
+</div>
+</div>
+<div class="flex-1"></div>
+<!-- Right Slide-in Explanation Panel -->
+<aside class="w-[360px] h-full glass-panel flex flex-col pointer-events-auto transform transition-transform duration-500 translate-x-0 shadow-2xl">
+<div class="p-8 flex-1 flex flex-col gap-8 overflow-y-auto">
+<div>
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">insights</span>
+<h3 class="text-2xl font-bold">Parabolic Motion</h3>
+</div>
+<p class="text-slate-300 leading-relaxed text-sm">
+                            A projectile launched under gravity travels in a parabolic path. Let's explore the physics behind this motion and see why your prediction differed from the actual result.
+                        </p>
+</div>
+<div class="flex flex-col gap-4">
+<div class="bg-white/5 rounded-xl p-4 border border-white/10">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Your Prediction</span>
+<span class="w-8 h-1 border-b-2 border-dashed border-primary"></span>
+</div>
+<div class="text-lg font-medium">Distance: 120m</div>
+</div>
+<div class="bg-white/5 rounded-xl p-4 border border-f59e0b/30 relative overflow-hidden">
+<div class="absolute inset-0 bg-f59e0b/5 pointer-events-none"></div>
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs text-f59e0b font-semibold uppercase tracking-wider">Actual Result</span>
+<span class="w-8 h-1 bg-f59e0b"></span>
+</div>
+<div class="text-lg font-medium text-f59e0b">Distance: 140m</div>
+</div>
+</div>
+<div class="bg-white/5 rounded-xl p-5 border border-white/10">
+<h4 class="font-semibold mb-2 text-sm text-primary">Key Factor: Launch Angle</h4>
+<p class="text-xs text-slate-400 mb-4">You launched at 35°. The optimal angle for maximum distance is 45°.</p>
+<div class="h-32 bg-background-dark/50 rounded-lg flex items-center justify-center border border-white/5 bg-cover bg-center" data-alt="Abstract mathematical equations overlay" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC9kSHEM2v67m_0ZuNbGPhpSd0pygkiFy6UPe2tQZPWaKs6NxlEh4EoFncltPj8TU-DkyOlH8ErJFtz_XSi8aXjXfH91SkNw2FAuGRBbeqsyo1D_hE_XD6JEqzkgkjH3kqyEy4SB2yERHnPSXMt2yvsDQf_OGU8ehHWB_AnFV05GfYWMxUqYOMZ96PDHChw1neRTTKoMYJdGMIuraQlXnwDSgQuJo9WRYskfjwKL-qQEiGzfA8zMMNfCVNun2aCRAcDJm7fBwmwEQE");'>
+<!-- Visual placeholder for a small diagram -->
+<span class="material-symbols-outlined text-white/30 text-4xl">architecture</span>
+</div>
+</div>
+<button class="mt-auto flex items-center justify-between w-full p-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition-colors group">
+<span class="font-semibold">See the math</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</aside>
+</main>
+<!-- Bottom Control Bar -->
+<footer class="absolute bottom-0 w-full z-40 bg-gradient-to-t from-background-dark via-background-dark/90 to-transparent pt-12 pb-6 px-8 pointer-events-none">
+<div class="max-w-[1600px] mx-auto flex items-center justify-between pointer-events-auto">
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center rounded-full h-14 px-6 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold transition-all gap-2 backdrop-blur">
+<span class="material-symbols-outlined">compare_arrows</span>
+<span>Toggle View</span>
+</button>
+<div class="h-8 w-px bg-white/20 mx-2"></div>
+<button class="flex items-center justify-center rounded-full h-14 px-8 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold transition-all gap-2 backdrop-blur">
+<span class="material-symbols-outlined">replay</span>
+<span>Replay</span>
+</button>
+<button class="flex items-center justify-center rounded-full h-14 px-8 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold transition-all gap-2 backdrop-blur">
+<span class="material-symbols-outlined">tune</span>
+<span>Try Different Settings</span>
+</button>
+</div>
+<button class="flex items-center justify-center rounded-full h-16 px-10 bg-primary hover:bg-primary/90 text-background-dark text-lg font-bold transition-all shadow-[0_0_20px_rgba(13,185,242,0.5)] gap-3">
+<span>Next Challenge</span>
+<span class="material-symbols-outlined font-bold">arrow_forward</span>
+</button>
+</div>
+</footer>
+</div>
+</body></html>

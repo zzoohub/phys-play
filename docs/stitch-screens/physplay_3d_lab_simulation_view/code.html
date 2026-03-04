@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhysPlay 3D Lab Simulation View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0db9f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#101e22",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 overflow-hidden min-h-screen">
+<div class="relative flex h-screen w-full flex-col group/design-root">
+<!-- Background Simulation Area (Full Screen) -->
+<div class="absolute inset-0 z-0 bg-cover bg-center" data-alt="Dark atmospheric physics simulation room with spotlight" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuChihgWvXcMC2tcCE38GHm3uwnjP0vukldAH08vH9uo3yOt9On2SFj0JxV_dkZU3E6yHnBTe9mzSoxt8oj_U9VZNE5wCuWxqfHv-S1gUwszX3Wvy6f_4x5Rfb1cJXq30GOBSUqTdvuOmmJn3oPaliPOsdjTVZ9b30arAiNZoCmleVMx5JnZF67oM5On9g9v2onVdSXp7OwFwZ9Rh6KKcvqNgJU7JM1pAVb8iDwvni7-VIbpNdD4MfDvb3tSztkeQYxjodOpd4H08js");'>
+<!-- Simulated 3D Elements (Visual Representation) -->
+<div class="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 pointer-events-none"></div>
+<!-- Glowing Parabolic Trajectory -->
+<div class="absolute top-[40%] left-[20%] w-[50%] h-[30%] border-t-2 border-r-2 border-primary/50 rounded-tr-[100%] rounded-bl-[10%] transform -rotate-12 pointer-events-none filter drop-shadow-[0_0_8px_rgba(13,185,242,0.8)]"></div>
+<!-- 3D Ball -->
+<div class="absolute top-[35%] left-[65%] w-12 h-12 bg-gradient-to-br from-white via-primary to-[#066a8c] rounded-full shadow-[0_0_20px_rgba(13,185,242,0.6),inset_-5px_-5px_15px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing"></div>
+<!-- Velocity Arrow -->
+<div class="absolute bottom-[25%] left-[15%] flex items-center transform -rotate-45 opacity-80">
+<div class="w-32 h-2 bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 rounded-l-full shadow-[0_0_10px_rgba(255,0,0,0.5)]"></div>
+<div class="w-0 h-0 border-t-[8px] border-t-transparent border-l-[16px] border-l-green-500 border-b-[8px] border-b-transparent shadow-[0_0_10px_rgba(0,255,0,0.5)]"></div>
+</div>
+<!-- Table/Ramp -->
+<div class="absolute bottom-[10%] left-[5%] w-[30%] h-[20%] bg-gradient-to-tr from-slate-800 to-slate-700 transform skew-x-12 rounded-t-lg shadow-2xl border-t border-r border-slate-600"></div>
+</div>
+<!-- Glassmorphic HUD Header -->
+<div class="relative z-10 flex flex-col h-full pointer-events-none">
+<header class="flex items-center justify-between px-8 py-4 bg-background-dark/40 backdrop-blur-md border-b border-primary/20 pointer-events-auto">
+<div class="flex items-center gap-4">
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary">
+<span class="material-symbols-outlined text-2xl">science</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight text-white drop-shadow-md">PhysPlay 3D Lab</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="px-4 py-1.5 rounded-full bg-slate-800/60 border border-slate-600/50 backdrop-blur-sm">
+<span class="text-primary font-medium tracking-wide">Projectile 8/10</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/60 text-slate-300 hover:bg-primary/20 hover:text-primary transition-colors border border-slate-600/50 backdrop-blur-sm pointer-events-auto">
+<span class="material-symbols-outlined">volume_up</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/60 text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-colors border border-slate-600/50 backdrop-blur-sm pointer-events-auto">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Bottom Hint -->
+<div class="mt-auto mb-10 flex justify-center w-full pointer-events-auto">
+<div class="px-6 py-3 rounded-full bg-background-dark/60 backdrop-blur-md border border-primary/30 flex items-center gap-3 animate-pulse">
+<span class="material-symbols-outlined text-primary/80">touch_app</span>
+<p class="text-slate-300 text-sm font-medium tracking-wide">Click and drag the ball to throw it</p>
+</div>
+</div>
+</div>
+</div>
+</body></html>

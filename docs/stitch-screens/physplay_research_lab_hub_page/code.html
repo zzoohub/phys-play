@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhysPlay Research Lab Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0db9f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0a1114",
+                        "surface-dark": "#101e22",
+                        "surface-darker": "#0d181b",
+                        "border-dark": "#1a3138",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-dark bg-surface-dark/80 backdrop-blur-md px-10 py-4 sticky top-0 z-50">
+<div class="flex items-center gap-4 text-primary">
+<span class="material-symbols-outlined text-3xl">science</span>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">PhysPlay</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<nav class="flex items-center gap-9">
+<a class="text-primary text-sm font-semibold leading-normal border-b-2 border-primary pb-1" href="#">Hub</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium leading-normal" href="#">Progress</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium leading-normal" href="#">Settings</a>
+</nav>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center py-8 px-8">
+<div class="max-w-[1024px] w-full flex flex-col gap-8">
+<div class="flex flex-wrap justify-between gap-3">
+<h1 class="text-slate-900 dark:text-white text-4xl font-bold leading-tight tracking-[-0.033em]">My Research Lab</h1>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Active Lab -->
+<div class="flex flex-col gap-4 p-5 rounded-xl bg-surface-dark border border-border-dark hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg overflow-hidden relative" data-alt="Vibrant science lab equipment" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7yE7SXQhCnUflxdSy4f1U6AvVwd9Vzkmszs3SaaRQTi5Dpg4LmPMlPpkHKZCnkmZWVU0-N8Y_oYASU7OPinpAGQyzvflaCaNb0FLFRXk5C31WEzUWafF3vJ3oA8Ow3q-kF4E0KOZPY89qVPa8pMkwzMsoqIW-2O_JwbbQDmx36oqxIJvWAxmzVUuNyLMDe_G87dc0ABI-OKISDDWt56NLzOrr28f8lK9weGzSLgMHCuDs7pQL94SuUHMp7B3cWtqEQjFHaJfSjT0');">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+<span class="bg-primary/20 text-primary backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold border border-primary/30">ACTIVE</span>
+</div>
+</div>
+<div>
+<h3 class="text-slate-900 dark:text-white text-xl font-bold leading-normal group-hover:text-primary transition-colors">MECHANICS LAB</h3>
+<div class="flex gap-4 mt-2">
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">build</span>
+<span>3/3 Stations</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">flag</span>
+<span>12/26 Challenges</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Locked Lab 1 -->
+<div class="flex flex-col gap-4 p-5 rounded-xl bg-surface-dark/50 border border-border-dark/50 opacity-70">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg overflow-hidden relative grayscale" data-alt="Molecular structures silhouette" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdOQxsSV5cWbtRrNaQ22K2oOEG0TVLnmFWnUkI-DSlV1YqdWS2HgILIEmwwglQFtTS39jUnV3p4wIHjWHE0oFaUlQEK06zfaVqTfrOME4yXiOB4vPWb0GmYB6Uahov5EBOoI4VDVE_L_AKQSLaPlFH7qK6fCbFwyBTYIypraPEgqMLiF1h86n80xCFBDXlokrN3-gvW47g0ibJzGrIEDdCiv91I5oZuPhXqshzU505URNmILee9LBJbK8keucx20pHGidzkmkGTGc');">
+<div class="absolute inset-0 bg-surface-dark/60 flex items-center justify-center backdrop-blur-[2px]">
+<span class="material-symbols-outlined text-4xl text-slate-400">lock</span>
+</div>
+</div>
+<div>
+<h3 class="text-slate-500 dark:text-slate-300 text-xl font-bold leading-normal">MOLECULAR LAB</h3>
+<div class="mt-2">
+<span class="text-slate-500 dark:text-slate-400 text-sm font-medium bg-surface-darker px-3 py-1 rounded-full">Coming soon</span>
+</div>
+</div>
+</div>
+<!-- Locked Lab 2 -->
+<div class="flex flex-col gap-4 p-5 rounded-xl bg-surface-dark/50 border border-border-dark/50 opacity-70">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg overflow-hidden relative grayscale" data-alt="Space observatory silhouette" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDXAXV3mzPmPRbbJIJhBcqK_GgTQQZoD5SnHbRDjJOWaUC-wI-62J3mPUJs7bAoIP0fH6sbYTZiR-CcYG5NzWvYsEdfAFpIyT9P3BHKMoVPzV5KO5kJomwNCa3_AkPGf2n01MtiZzgwOgqAKuD_1lWxMwZXuGxfxWWP6ER0yp8PWqwLQ1ygGfond-gOT2uuKPTEsjQ_m5TtO0kOqPIw_wox6nOdTD5uMvNBObYBGOf7MPid-WGS9aCirIBFFGo4foqBeMMpHkcEIXw');">
+<div class="absolute inset-0 bg-surface-dark/60 flex items-center justify-center backdrop-blur-[2px]">
+<span class="material-symbols-outlined text-4xl text-slate-400">lock</span>
+</div>
+</div>
+<div>
+<h3 class="text-slate-500 dark:text-slate-300 text-xl font-bold leading-normal">SPACE OBSERVATORY</h3>
+</div>
+</div>
+<!-- Locked Lab 3 -->
+<div class="flex flex-col gap-4 p-5 rounded-xl bg-surface-dark/50 border border-border-dark/50 opacity-70">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg overflow-hidden relative grayscale" data-alt="Quantum computing silhouette" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBff5i3_cxyHILW1P6pR5xwiTYHn1k_FSzIdJjSprkZ3FHV0A86BPsh3KCBBfEV_BR7FRzojMtV8Jwv8e-utNPS8ZyfPFvYW6LhWGYxC-LiTKoedfWPWm2mxQ4dmSaR2OqNOEC575MfPrIe1bDYwGZf01Sbkd4s7sotpV2HcxiMWZ3zv8bL-VLOcOhYsi9o3V79CGWZmEs0Hr9MsUUmmtSizKQtpO0vg8DhgeqsoNl_zqVFAoe6S1l2-soNOdZXDGOYyIjSqBP-kUk');">
+<div class="absolute inset-0 bg-surface-dark/60 flex items-center justify-center backdrop-blur-[2px]">
+<span class="material-symbols-outlined text-4xl text-slate-400">lock</span>
+</div>
+</div>
+<div>
+<h3 class="text-slate-500 dark:text-slate-300 text-xl font-bold leading-normal">QUANTUM LAB</h3>
+</div>
+</div>
+</div>
+<div class="mt-6 flex flex-col gap-4">
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] border-b border-border-dark pb-4">Mechanics Lab Stations</h2>
+<!-- Station 1 -->
+<div class="flex items-center gap-4 bg-surface-dark border border-border-dark rounded-xl px-6 py-5 justify-between hover:border-primary/30 transition-colors">
+<div class="flex items-center gap-6 w-full">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-14 border border-primary/20">
+<span class="material-symbols-outlined text-3xl">rocket_launch</span>
+</div>
+<div class="flex flex-col justify-center flex-1">
+<p class="text-slate-900 dark:text-white text-lg font-bold leading-normal mb-1">Projectile</p>
+<div class="flex items-center gap-3">
+<div class="w-full max-w-[200px] h-2 bg-surface-darker rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 80%;"></div>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">8/10</p>
+</div>
+</div>
+<div class="shrink-0 ml-auto">
+<button class="flex items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary/20 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-bold leading-normal">
+<span>Continue</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Station 2 -->
+<div class="flex items-center gap-4 bg-surface-dark border border-border-dark rounded-xl px-6 py-5 justify-between hover:border-primary/30 transition-colors">
+<div class="flex items-center gap-6 w-full">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-14 border border-primary/20">
+<span class="material-symbols-outlined text-3xl">bolt</span>
+</div>
+<div class="flex flex-col justify-center flex-1">
+<p class="text-slate-900 dark:text-white text-lg font-bold leading-normal mb-1">Energy</p>
+<div class="flex items-center gap-3">
+<div class="w-full max-w-[200px] h-2 bg-surface-darker rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 37.5%;"></div>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">3/8</p>
+</div>
+</div>
+<div class="shrink-0 ml-auto">
+<button class="flex items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary/20 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-bold leading-normal">
+<span>Continue</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Station 3 -->
+<div class="flex items-center gap-4 bg-surface-dark border border-border-dark rounded-xl px-6 py-5 justify-between hover:border-primary/30 transition-colors">
+<div class="flex items-center gap-6 w-full">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-14 border border-primary/20">
+<span class="material-symbols-outlined text-3xl">water_drop</span>
+</div>
+<div class="flex flex-col justify-center flex-1">
+<p class="text-slate-900 dark:text-white text-lg font-bold leading-normal mb-1">Wave</p>
+<div class="flex items-center gap-3">
+<div class="w-full max-w-[200px] h-2 bg-surface-darker rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 12.5%;"></div>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">1/8</p>
+</div>
+</div>
+<div class="shrink-0 ml-auto">
+<button class="flex items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-bold leading-normal shadow-[0_0_15px_rgba(13,185,242,0.3)]">
+<span>Start</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>
