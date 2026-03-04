@@ -62,6 +62,7 @@ All commands in `justfile`. Run `just --list` to see all recipes.
 ### Web Workflow (MUST FOLLOW)
 - Design system: **z-design-system**
 - UI: **frontend-design**
+- Web source code: **vercel-composition-patterns** (composition)
 - 3D/XR: **z-web3d**
 
 ### Web Conventions
