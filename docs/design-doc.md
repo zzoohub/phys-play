@@ -218,7 +218,7 @@ browser.main.app -> sentry: "Errors"
 | Rapier WASM + Solvers | @dimforge/rapier3d + custom Rust WASM | Rigid body physics (Rapier) and compute-heavy simulations (custom Rust WASM) in Web Worker |
 | Rust WASM Compute | Custom crates → wasm-pack | CPU-bound computation offload: wave equation solver, large-scale particle systems, prediction trajectory calculation. Compiled from `crates/` to `wasm-out/`. Loaded in Web Worker alongside Rapier |
 | XR Layer | @react-three/xr | [Phase 2+] WebXR session management, hand tracking input mapping. Same R3F scene graph — input adapters swap from mouse/touch to hand tracking |
-| 3D Assets | glTF 2.0 (Draco-compressed) + KTX2 textures | Standard 3D asset format. Draco for geometry compression, KTX2 for GPU-compressed textures. Loaded via Drei's `useGLTF` |
+| 3D Assets | glTF 2.0 (meshoptimizer-compressed) + KTX2 textures | Standard 3D asset format. meshoptimizer for geometry compression (faster decode than Draco, better for real-time), KTX2 (Basis Universal) for GPU-compressed textures (BC7/ASTC/ETC2 — transcoded at load via Three.js built-in `basis_transcoder`). Loaded via Drei's `useGLTF` |
 | SQLite WASM + OPFS | @sqlite.org/sqlite-wasm via sqlocal | User progress, prediction history, adaptive engine state. Runs in dedicated Worker with OPFS SyncAccessHandle for fast I/O |
 | Cloudflare Workers | Vinxi/Nitro on Workers | Edge SSR, static asset serving, i18n routing |
 | Cloudflare R2 | S3-compatible object storage | Large static assets (skybox textures, audio, glTF models) |
@@ -511,7 +511,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 | Code-split per engine | <500ms engine switch | Dynamic `import()` per simulation engine. Only loaded engine's code + assets are in memory |
 | Instanced rendering | Many identical objects (e.g., wave particles) | Three.js InstancedMesh for particle systems and repeated objects |
 | Web Worker physics | Unblock main thread | Rapier + custom solvers run in dedicated Worker. postMessage for state sync |
-| Asset optimization | <3s initial load | KTX2 compressed textures, Draco-compressed glTF, audio sprites. Brotli compression on Workers |
+| Asset optimization | <3s initial load | KTX2 compressed textures (GPU-native, transcoded via built-in `basis_transcoder`), meshoptimizer-compressed glTF (near-instant decode), audio sprites. Brotli compression on Workers |
 | LOD (Level of Detail) | Mobile performance | Simplified geometry + reduced particle counts on mobile/low-GPU |
 | Lazy asset loading | Only load current engine's assets | Service Worker prefetches next likely engine in background |
 | Object pooling | Reduce GC pressure | Reuse ECS entities and Three.js objects across challenges instead of create/destroy |
@@ -665,12 +665,12 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 
 - **Status**: Accepted
 - **Context**: PhysPlay needs 3D assets for simulation environments (skyboxes, lab equipment, interactive objects). Assets must load fast, compress well, and integrate with the Three.js/R3F pipeline.
-- **Decision**: glTF 2.0 as the exclusive 3D asset format. Draco compression for geometry, KTX2 (Basis Universal) for GPU-compressed textures. Loaded via Drei's `useGLTF` with automatic caching.
+- **Decision**: glTF 2.0 as the exclusive 3D asset format. meshoptimizer for geometry compression (faster decode than Draco — critical for <500ms engine switch target), KTX2 (Basis Universal) for GPU-compressed textures (transcoded at load via Three.js built-in `basis_transcoder` to BC7/ASTC/ETC2 per GPU). Loaded via Drei's `useGLTF` with automatic caching.
 - **Alternatives Considered**:
   - **FBX**: Common in game industry. → Rejected because FBX is a proprietary Autodesk format, has larger file sizes, and Three.js's FBX loader is less maintained than the glTF loader.
   - **USD (Universal Scene Description)**: Pixar's format, gaining traction. → Rejected because browser support is nascent, Three.js USD support is experimental, and the tooling ecosystem is not mature for web delivery.
   - **Procedural-only (no asset files)**: Generate all geometry in code. → Rejected for environments and complex objects. Procedural generation is used for simulation objects (balls, ramps, wave surfaces) but lab environments, skyboxes, and visual polish require authored assets.
-- **Consequences**: (+) Industry standard for web 3D, excellent compression (Draco + KTX2), first-class Three.js/Drei support, broad tooling ecosystem (Blender, etc.). (−) KTX2 transcoding adds ~100ms to first texture load; Draco WASM decoder adds ~50KB to initial bundle.
+- **Consequences**: (+) Industry standard for web 3D, excellent compression (meshoptimizer + KTX2), first-class Three.js/Drei support, broad tooling ecosystem (Blender, etc.). (−) KTX2 transcoding adds ~100ms to first texture load. meshoptimizer decode is near-instant (no WASM decoder overhead unlike Draco's ~50KB + ~50ms).
 
 ### ADR-11: SQLite WASM + OPFS for Client-Side Storage
 
