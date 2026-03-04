@@ -1,0 +1,61 @@
+{
+  "common_exit": "Exit",
+  "common_skip": "Skip",
+  "common_next": "Next",
+
+  "nav_hub": "Hub",
+  "nav_progress": "Progress",
+  "nav_settings": "Settings",
+
+  "hub_title": "My Research Lab",
+  "hub_mechanics_lab": "MECHANICS LAB",
+  "hub_molecular_lab": "MOLECULAR LAB",
+  "hub_space_observatory": "SPACE OBSERVATORY",
+  "hub_quantum_lab": "QUANTUM LAB",
+  "hub_stations_title": "Mechanics Lab Stations",
+  "hub_station_projectile": "Projectile",
+  "hub_station_energy": "Energy",
+  "hub_station_wave": "Wave",
+  "hub_active": "ACTIVE",
+  "hub_coming_soon": "Coming soon",
+  "hub_stations_count": "{current}/{total} Stations",
+  "hub_challenges_count": "{current}/{total} Challenges",
+  "hub_continue": "Continue",
+  "hub_start": "Start",
+
+  "lab_title": "Lab",
+  "lab_station_label": "{station} Station",
+  "lab_loading": "Loading physics engine...",
+  "lab_error": "Failed to load physics engine",
+
+  "phase_predict": "PREDICT",
+  "phase_play": "PLAY",
+  "phase_discover": "DISCOVER",
+
+  "predict_hint": "Make your prediction, then submit or skip",
+  "predict_submit": "Submit Prediction",
+
+  "play_hint": "Click and drag to aim, release to launch",
+
+  "discover_title": "Discovery",
+  "discover_simple": "Simple",
+  "discover_detailed": "Detailed",
+  "discover_math": "Math",
+  "discover_prediction_label": "Prediction",
+  "discover_result_label": "Actual Result",
+  "discover_skipped": "Skipped",
+  "discover_max_height": "Max Height",
+  "discover_distance": "Distance",
+  "discover_flight_time": "Flight Time",
+  "discover_related_concepts": "Related Concepts",
+  "discover_exit_hub": "Exit to Hub",
+  "discover_next_challenge": "Next Challenge",
+
+  "challenge_monkey_hunter_question": "The target starts falling the moment you fire. Where should you aim to hit it?",
+  "challenge_monkey_hunter_option_above": "Above the target",
+  "challenge_monkey_hunter_option_direct": "Directly at the target",
+  "challenge_monkey_hunter_option_below": "Below the target",
+  "challenge_monkey_hunter_level1": "Both the ball and the target fall at the same rate — so aiming directly at the target works!",
+  "challenge_monkey_hunter_level2": "Horizontal and vertical motion are independent. Gravity acts equally on both the projectile and the target, so the vertical displacement is the same for both.",
+  "challenge_monkey_hunter_level3": "y_target(t) = y₀ - ½gt², y_projectile(t) = v₀·sin(θ)·t - ½gt². The ½gt² terms cancel in the difference."
+}

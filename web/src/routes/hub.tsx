@@ -1,24 +1,31 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { SiteNav } from '#/site/shared/ui/site-nav'
+import { m } from '#/paraglide/messages.js'
 
 export const Route = createFileRoute('/hub')({
   component: HubPage,
 })
 
 function HubPage() {
+  const navigate = useNavigate()
+
+  const goToLab = () => {
+    navigate({ to: '/lab' })
+  }
+
   return (
     <div className="min-h-screen bg-bg-dark">
       <SiteNav />
       <main className="flex-1 flex flex-col items-center py-8 px-8">
         <div className="max-w-[1024px] w-full flex flex-col gap-8">
           <h1 className="text-white text-4xl font-bold leading-tight tracking-[-0.033em]">
-            My Research Lab
+            {m.hub_title()}
           </h1>
 
           {/* Lab Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Mechanics Lab - Active */}
-            <div className="flex flex-col gap-4 p-5 rounded-xl bg-surface-dark border border-border-dark hover:border-primary/50 transition-colors cursor-pointer group">
+            <div onClick={goToLab} className="flex flex-col gap-4 p-5 rounded-xl bg-surface-dark border border-border-dark hover:border-primary/50 transition-colors cursor-pointer group">
               <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-gradient-to-br from-surface-dark to-surface-darker">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="material-symbols-outlined text-6xl text-primary/40">
@@ -28,66 +35,69 @@ function HubPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-4">
                   <span className="bg-primary/20 text-primary backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold border border-primary/30">
-                    ACTIVE
+                    {m.hub_active()}
                   </span>
                 </div>
               </div>
               <div>
                 <h3 className="text-white text-xl font-bold group-hover:text-primary transition-colors">
-                  MECHANICS LAB
+                  {m.hub_mechanics_lab()}
                 </h3>
                 <div className="flex gap-4 mt-2">
                   <div className="flex items-center gap-1 text-slate-400 text-sm font-medium">
                     <span className="material-symbols-outlined text-[18px]">
                       build
                     </span>
-                    <span>3/3 Stations</span>
+                    <span>{m.hub_stations_count({ current: '3', total: '3' })}</span>
                   </div>
                   <div className="flex items-center gap-1 text-slate-400 text-sm font-medium">
                     <span className="material-symbols-outlined text-[18px]">
                       flag
                     </span>
-                    <span>12/26 Challenges</span>
+                    <span>{m.hub_challenges_count({ current: '12', total: '26' })}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Molecular Lab - Locked */}
-            <LockedLab name="MOLECULAR LAB" icon="hub" label="Coming soon" />
+            <LockedLab name={m.hub_molecular_lab()} icon="hub" label={m.hub_coming_soon()} />
             {/* Space Observatory - Locked */}
-            <LockedLab name="SPACE OBSERVATORY" icon="satellite_alt" />
+            <LockedLab name={m.hub_space_observatory()} icon="satellite_alt" />
             {/* Quantum Lab - Locked */}
-            <LockedLab name="QUANTUM LAB" icon="memory" />
+            <LockedLab name={m.hub_quantum_lab()} icon="memory" />
           </div>
 
           {/* Mechanics Lab Stations */}
           <div className="mt-6 flex flex-col gap-4">
             <h2 className="text-white text-2xl font-bold leading-tight tracking-[-0.015em] border-b border-border-dark pb-4">
-              Mechanics Lab Stations
+              {m.hub_stations_title()}
             </h2>
 
             <StationRow
               icon="rocket_launch"
-              name="Projectile"
+              name={m.hub_station_projectile()}
               progress={80}
               completed="8/10"
-              action="Continue"
+              action={m.hub_continue()}
+              onAction={goToLab}
             />
             <StationRow
               icon="bolt"
-              name="Energy"
+              name={m.hub_station_energy()}
               progress={37.5}
               completed="3/8"
-              action="Continue"
+              action={m.hub_continue()}
+              onAction={goToLab}
             />
             <StationRow
               icon="water_drop"
-              name="Wave"
+              name={m.hub_station_wave()}
               progress={12.5}
               completed="1/8"
-              action="Start"
+              action={m.hub_start()}
               highlight
+              onAction={goToLab}
             />
           </div>
         </div>
@@ -140,6 +150,7 @@ function StationRow({
   completed,
   action,
   highlight,
+  onAction,
 }: {
   icon: string
   name: string
@@ -147,6 +158,7 @@ function StationRow({
   completed: string
   action: string
   highlight?: boolean
+  onAction?: () => void
 }) {
   return (
     <div className="flex items-center gap-4 bg-surface-dark border border-border-dark rounded-xl px-6 py-5 justify-between hover:border-primary/30 transition-colors">
@@ -168,6 +180,7 @@ function StationRow({
         </div>
         <div className="shrink-0 ml-auto">
           <button
+            onClick={onAction}
             className={
               highlight
                 ? 'flex items-center justify-center rounded-full h-10 px-6 bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-bold shadow-[0_0_15px_rgba(13,185,242,0.3)]'

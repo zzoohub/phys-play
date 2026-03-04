@@ -1,3 +1,5 @@
+import { LocaleProvider } from './locale-context'
+
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <LocaleProvider>{children}</LocaleProvider>
 }

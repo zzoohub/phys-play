@@ -111,6 +111,9 @@ infra/sdks/
 # Sentry
 .env.sentry-build-plugin
 
+# Paraglide JS (generated)
+web/src/paraglide/
+
 # Misc
 *.orig.*
 *.bak

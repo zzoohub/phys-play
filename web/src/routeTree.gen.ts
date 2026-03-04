@@ -14,7 +14,6 @@ import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as HubRouteImport } from './routes/hub'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LabDiscoverRouteImport } from './routes/lab.discover'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -41,56 +40,41 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LabDiscoverRoute = LabDiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
-  getParentRoute: () => LabRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/hub': typeof HubRoute
-  '/lab': typeof LabRouteWithChildren
+  '/lab': typeof LabRoute
   '/progress': typeof ProgressRoute
   '/settings': typeof SettingsRoute
-  '/lab/discover': typeof LabDiscoverRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/hub': typeof HubRoute
-  '/lab': typeof LabRouteWithChildren
+  '/lab': typeof LabRoute
   '/progress': typeof ProgressRoute
   '/settings': typeof SettingsRoute
-  '/lab/discover': typeof LabDiscoverRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/hub': typeof HubRoute
-  '/lab': typeof LabRouteWithChildren
+  '/lab': typeof LabRoute
   '/progress': typeof ProgressRoute
   '/settings': typeof SettingsRoute
-  '/lab/discover': typeof LabDiscoverRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hub' | '/lab' | '/progress' | '/settings' | '/lab/discover'
+  fullPaths: '/' | '/hub' | '/lab' | '/progress' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hub' | '/lab' | '/progress' | '/settings' | '/lab/discover'
-  id:
-    | '__root__'
-    | '/'
-    | '/hub'
-    | '/lab'
-    | '/progress'
-    | '/settings'
-    | '/lab/discover'
+  to: '/' | '/hub' | '/lab' | '/progress' | '/settings'
+  id: '__root__' | '/' | '/hub' | '/lab' | '/progress' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HubRoute: typeof HubRoute
-  LabRoute: typeof LabRouteWithChildren
+  LabRoute: typeof LabRoute
   ProgressRoute: typeof ProgressRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -132,30 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lab/discover': {
-      id: '/lab/discover'
-      path: '/discover'
-      fullPath: '/lab/discover'
-      preLoaderRoute: typeof LabDiscoverRouteImport
-      parentRoute: typeof LabRoute
-    }
   }
 }
-
-interface LabRouteChildren {
-  LabDiscoverRoute: typeof LabDiscoverRoute
-}
-
-const LabRouteChildren: LabRouteChildren = {
-  LabDiscoverRoute: LabDiscoverRoute,
-}
-
-const LabRouteWithChildren = LabRoute._addFileChildren(LabRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HubRoute: HubRoute,
-  LabRoute: LabRouteWithChildren,
+  LabRoute: LabRoute,
   ProgressRoute: ProgressRoute,
   SettingsRoute: SettingsRoute,
 }

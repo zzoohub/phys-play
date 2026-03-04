@@ -1,0 +1,44 @@
+{
+  "id": "projectile-monkey-hunter",
+  "engineId": "projectile",
+  "version": 2,
+  "params": {
+    "gravity": 9.8,
+    "launchSpeed": 30,
+    "mass": 0.1,
+    "drag": 0,
+    "targetPosition": [15, 10, 0],
+    "targetDropOnLaunch": true,
+    "environmentPreset": "earth"
+  },
+  "predict": {
+    "type": "placement",
+    "question": {
+      "en": "The target starts falling the moment you fire. Where should you aim to hit it?",
+      "ko": "발사하는 순간 과녁이 떨어지기 시작합니다. 어디를 조준해야 할까요?"
+    },
+    "options": {
+      "en": ["Above the target", "Directly at the target", "Below the target"],
+      "ko": ["과녁 위쪽", "과녁을 향해 직접", "과녁 아래쪽"]
+    }
+  },
+  "discover": {
+    "relatedConcepts": ["gravity", "independence-of-motion"],
+    "level1": {
+      "en": "Both the ball and the target fall at the same rate — so aiming directly at the target works!",
+      "ko": "공과 과녁은 같은 속도로 떨어집니다 — 그래서 과녁을 직접 조준하면 됩니다!"
+    },
+    "level2": {
+      "en": "Horizontal and vertical motion are independent. Gravity acts equally on both the projectile and the target, so the vertical displacement is the same for both.",
+      "ko": "수평 운동과 수직 운동은 독립적입니다. 중력은 투사체와 과녁 모두에 동일하게 작용하므로 수직 변위가 같습니다."
+    },
+    "level3": {
+      "en": "y_target(t) = y₀ - ½gt², y_projectile(t) = v₀·sin(θ)·t - ½gt². The ½gt² terms cancel in the difference.",
+      "ko": "y_target(t) = y₀ - ½gt², y_projectile(t) = v₀·sin(θ)·t - ½gt². 차이에서 ½gt² 항이 상쇄됩니다."
+    }
+  },
+  "difficulty": 1,
+  "space": "mechanics-lab",
+  "station": "projectile",
+  "tags": ["gravity", "independence-of-motion", "aiming-3d"]
+}

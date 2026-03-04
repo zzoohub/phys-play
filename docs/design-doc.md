@@ -555,7 +555,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 | 2 | SharedArrayBuffer for Worker ↔ Main thread? | Enables zero-copy physics state transfer but requires COOP/COEP headers (breaks some third-party embeds) | Discovery sprint |
 | 3 | Custom wave solver: JS or Rust WASM? | JS is simpler to develop but may be slow. Rust WASM is faster but adds build complexity | Discovery sprint (benchmark) |
 | 4 | Landing page SSR strategy: full SSR on Workers vs. ISR-like static with revalidation? | Full SSR per request vs. prerendered at build time with edge caching | Pre-launch |
-| 5 | i18n approach: compile-time vs. runtime? | Compile-time (smaller bundles, but requires rebuild for translation changes) vs. runtime (flexible, slightly larger bundle) | Phase 1 implementation |
+| 5 | i18n approach: compile-time vs. runtime? | **Decided: Compile-time (Paraglide JS v2)**. Tree-shakable message functions, cookie-based locale persistence, ~40 message keys for en/ko | Resolved |
 | 6 | Asset hosting: bundled in Workers vs. R2 bucket vs. external CDN? | Bundled (simplest, but Workers has 25MB limit) vs. R2 (scalable, same platform) vs. external (more infra) | Phase 1 implementation |
 | 7 | How to handle physics determinism across browsers for prediction evaluation? | Fixed timestep + tolerance-based evaluation (not bit-exact comparison) | Discovery sprint |
 

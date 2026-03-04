@@ -1,0 +1,61 @@
+{
+  "common_exit": "나가기",
+  "common_skip": "건너뛰기",
+  "common_next": "다음",
+
+  "nav_hub": "허브",
+  "nav_progress": "진행",
+  "nav_settings": "설정",
+
+  "hub_title": "나의 연구실",
+  "hub_mechanics_lab": "역학 실험실",
+  "hub_molecular_lab": "분자 실험실",
+  "hub_space_observatory": "우주 관측소",
+  "hub_quantum_lab": "양자 실험실",
+  "hub_stations_title": "역학 실험실 스테이션",
+  "hub_station_projectile": "투사체",
+  "hub_station_energy": "에너지",
+  "hub_station_wave": "파동",
+  "hub_active": "진행중",
+  "hub_coming_soon": "준비중",
+  "hub_stations_count": "{current}/{total} 스테이션",
+  "hub_challenges_count": "{current}/{total} 챌린지",
+  "hub_continue": "계속하기",
+  "hub_start": "시작하기",
+
+  "lab_title": "실험실",
+  "lab_station_label": "{station} 스테이션",
+  "lab_loading": "물리 엔진 로딩 중...",
+  "lab_error": "물리 엔진 로딩 실패",
+
+  "phase_predict": "예측",
+  "phase_play": "실험",
+  "phase_discover": "발견",
+
+  "predict_hint": "예측을 하고 제출하거나 건너뛰세요",
+  "predict_submit": "예측 제출",
+
+  "play_hint": "클릭하고 드래그하여 조준, 놓으면 발사",
+
+  "discover_title": "발견",
+  "discover_simple": "간단히",
+  "discover_detailed": "자세히",
+  "discover_math": "수학",
+  "discover_prediction_label": "예측",
+  "discover_result_label": "실제 결과",
+  "discover_skipped": "건너뜀",
+  "discover_max_height": "최대 높이",
+  "discover_distance": "거리",
+  "discover_flight_time": "체공 시간",
+  "discover_related_concepts": "관련 개념",
+  "discover_exit_hub": "허브로 나가기",
+  "discover_next_challenge": "다음 챌린지",
+
+  "challenge_monkey_hunter_question": "발사하는 순간 과녁이 떨어지기 시작합니다. 어디를 조준해야 할까요?",
+  "challenge_monkey_hunter_option_above": "과녁 위쪽",
+  "challenge_monkey_hunter_option_direct": "과녁을 향해 직접",
+  "challenge_monkey_hunter_option_below": "과녁 아래쪽",
+  "challenge_monkey_hunter_level1": "공과 과녁은 같은 속도로 떨어집니다 — 그래서 과녁을 직접 조준하면 됩니다!",
+  "challenge_monkey_hunter_level2": "수평 운동과 수직 운동은 독립적입니다. 중력은 투사체와 과녁 모두에 동일하게 작용하므로 수직 변위가 같습니다.",
+  "challenge_monkey_hunter_level3": "y_target(t) = y₀ - ½gt², y_projectile(t) = v₀·sin(θ)·t - ½gt². 차이에서 ½gt² 항이 상쇄됩니다."
+}

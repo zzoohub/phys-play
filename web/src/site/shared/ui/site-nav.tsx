@@ -1,13 +1,16 @@
 import { Link, useRouterState } from '@tanstack/react-router'
+import { m } from '#/paraglide/messages.js'
+import { useLocale } from '#/app/locale-context'
 
 const navLinks = [
-  { to: '/hub', label: 'Hub' },
-  { to: '/progress', label: 'Progress' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/hub', label: () => m.nav_hub() },
+  { to: '/progress', label: () => m.nav_progress() },
+  { to: '/settings', label: () => m.nav_settings() },
 ] as const
 
 export function SiteNav() {
   const { location } = useRouterState()
+  const { locale, switchLocale } = useLocale()
 
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-border-dark bg-surface-dark/80 backdrop-blur-md px-10 py-4 sticky top-0 z-50">
@@ -30,10 +33,16 @@ export function SiteNav() {
                   : 'text-slate-400 hover:text-white transition-colors text-sm font-medium leading-normal'
               }
             >
-              {link.label}
+              {link.label()}
             </Link>
           )
         })}
+        <button
+          onClick={switchLocale}
+          className="text-xs font-bold px-2.5 py-1 rounded-full border border-border-dark text-slate-400 hover:text-white hover:border-primary/50 transition-colors"
+        >
+          {locale === 'en' ? 'KO' : 'EN'}
+        </button>
       </nav>
     </header>
   )
