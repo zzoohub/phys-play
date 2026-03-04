@@ -262,7 +262,7 @@ src/
 │   ├── challenges/   # Challenge definitions per engine
 │   └── concepts/     # Discover-phase concept library
 │
-└── shared/           # Cross-layer (site + experience)
+└── platform/         # Cross-layer (site + experience)
     ├── stores/       # Auth [Phase 3+], theme, language
     ├── db/           # SQLite WASM + OPFS client database (user progress, adaptive state)
     ├── i18n/         # en/ko translations
@@ -270,7 +270,7 @@ src/
     └── constants/    # Feature flags, config
 ```
 
-**Core rule**: `site/` and `experience/` never import each other. Cross-layer data flows through `shared/stores/`.
+**Core rule**: `site/` and `experience/` never import each other. Cross-layer data flows through `platform/stores/`.
 
 **Critical path components**:
 1. **Simulation Engines** (`engine/simulation/`): The heart of the product. Each engine implements a common `SimulationEngine` interface — setup, step, evaluate, cleanup. The engine processes challenge JSON, sets up ECS entities, and runs the physics loop.
@@ -695,7 +695,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 - `engine/`: ECS world, Rapier physics adapter, 3 simulation engines (projectile, collision-energy, wave), challenge loader + validator, adaptive selector (rule-based)
 - `domains/`: mechanics-lab (orchestrates 3 stations), hub, onboarding
 - `content/`: 26 challenge JSONs, concept library JSONs
-- `shared/`: Zustand stores (progress, theme, language), i18n (en/ko), types
+- `platform/`: Zustand stores (progress, theme, language), i18n (en/ko), types
 
 **Infrastructure**: Cloudflare Workers + R2. GitHub Actions CI/CD. PostHog analytics. Sentry error tracking.
 
@@ -715,7 +715,7 @@ Phase 1 has a minimal attack surface (static site + client-side JS). Key conside
 **New components**:
 - `engine/simulation/molecular/`: Molecular engine (VSEPR, stereochemistry, bonding)
 - Backend: Rust (Axum) API on Cloud Run — auth, progress sync, challenge metadata
-- `shared/stores/auth.ts`: Auth state, token management
+- `platform/stores/auth.ts`: Auth state, token management
 - UGC v1: Challenge editor UI (composes engine params → JSON)
 
 **New infrastructure**: Cloud Run (Rust API), Neon PostgreSQL (us-east-1), auth (Google OAuth2 + JWT).

@@ -169,7 +169,7 @@ Cross-links:            Bridges:
 
 Extends the 3D structure above. The key difference: 2D pages go in `site/`, 3D content is wrapped in `experience/`.
 
-**Core rule: `site/` and `experience/` NEVER import each other.** Cross-layer data flows through `shared/stores/`.
+**Core rule: `site/` and `experience/` NEVER import each other.** Cross-layer data flows through `platform/stores/`.
 
 ### What Changes from 3D-only
 
@@ -177,7 +177,7 @@ Extends the 3D structure above. The key difference: 2D pages go in `site/`, 3D c
 |---------|---------|-------|
 | `scene/`, `hud/`, `xr/` at top level | Nested under `experience/` | + `experience/canvas/` for renderer setup |
 | — | `site/` added | FSD structure (views, widgets, features, entities, shared) |
-| `shared/` | Three levels of shared | `shared/` (global), `site/shared/` (2D), `experience/shared/` (3D) |
+| `shared/` | `platform/` + nested shared | `platform/` (global), `site/shared/` (2D), `experience/shared/` (3D) |
 
 ### Base Structure
 
@@ -220,7 +220,7 @@ src/
 │       ├── lib/
 │       └── assets/               # glTF, KTX2 textures, audio
 │
-└── shared/                       # Global (referenced by all layers)
+└── platform/                     # Global (referenced by all layers)
     ├── api/
     ├── lib/
     ├── hooks/
@@ -238,21 +238,21 @@ src/
     ↓
   experience/  ─reads→  engine/
     ↓
-  shared/
+  platform/
 
-  routes/ → site/ → shared/         (independent 2D branch)
+  routes/ → site/ → platform/       (independent 2D branch)
   site/ ✕ experience/               (NEVER import each other)
 
 Within experience/:
 
-  canvas/ → scene/ → hud/ → experience/shared/
+  canvas/ → scene/ → hud/ → experience/shared/ → platform/
 ```
 
 ### Store Scoping
 
 | Location | Scope | Example |
 |----------|-------|---------|
-| `shared/stores/` | Cross-layer (site + experience) | auth, user, language, theme |
+| `platform/stores/` | Cross-layer (site + experience) | auth, user, language, theme |
 | `domains/[name]/stores/` | Domain-scoped | editor mode, tool selection |
 | `site/shared/` | 2D-only | form drafts, table sort/filter |
 | `experience/shared/` | 3D-only | camera mode, render quality |
