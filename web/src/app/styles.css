@@ -1,2 +1,20 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+@theme {
+  --color-primary: #0db9f2;
+  --color-bg-dark: #0a1114;
+  --color-surface-dark: #101e22;
+  --color-surface-darker: #0d181b;
+  --color-border-dark: #1a3138;
+
+  --font-display: "Space Grotesk", sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
